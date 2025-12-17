@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Beranda Aplikasi</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      padding: 16px;
+      line-height: 1.6;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding: 16px 0;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #2c3e50;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-btn {
+      display: block;
+      padding: 16px 12px;
+      background: #3498db;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      word-break: break-word;
+    }
+
+    .feature-btn:hover,
+    .feature-btn:focus {
+      background: #2980b9;
+      transform: translateY(-2px);
+    }
+
+    .feature-btn:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 480px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .features-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Beranda Aplikasi</h1>
+  </header>
+
+  <main class="features-grid">
+    <a href="fitur1.html" class="feature-btn">data market</a>
+    <a href="fitur2.html" class="feature-btn">rampa40</a>
+    <a href="fitur3.html" class="feature-btn">saringan</a>
+    <a href="fitur4.html" class="feature-btn">kamar</a>
+    <a href="fitur5.html" class="feature-btn">ngai</a>
+    <a href="fitur6.html" class="feature-btn">hasil</a>
+    <a href="fitur7.html" class="feature-btn">nota</a>
+    <a href="fitur8.html" class="feature-btn">aca</a>
+    <a href="fitur9.html" class="feature-btn">puga</a>
+    <a href="fitur10.html" class="feature-btn">andhi</a>
+  </main>
+</body>
+</html>
