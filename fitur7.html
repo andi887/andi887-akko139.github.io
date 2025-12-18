@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nota</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.4em;
+      margin: 0 0 16px;
+    }
+    .back-home {
+      text-align: center;
+      margin: 12px 0;
+    }
+    .back-home a {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #4285f4;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.95em;
+    }
+    .back-home a:hover {
+      background: #3367d6;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px 0;
+      font-weight: bold;
+    }
+    #btn-simpan { background: #4CAF50; color: white; }
+    #btn-hapus { background: #f44336; color: white; }
+    #btn-simpan:hover { background: #45a049; }
+    #btn-hapus:hover { background: #d32f2f; }
+
+    #nota-text {
+      width: 100%;
+      height: 180px;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: Arial, monospace;
+      font-size: 1em;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
+    .status {
+      text-align: center;
+      color: #e74c3c;
+      min-height: 20px;
+      margin: 8px 0;
+      font-size: 0.95em;
+    }
+    .info {
+      text-align: center;
+      color: #666;
+      font-size: 0.9em;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📝 nota</h1>
+
+  <div class="back-home">
+    <a href="index.html">🔙 Kembali ke Beranda</a>
+  </div>
+
+  <textarea id="nota-text" placeholder="Tulis catatan penting di sini..."></textarea>
+  <div class="info" id="info-time"></div>
+
+  <button class="btn" id="btn-simpan">💾 Simpan Sekarang</button>
+  <button class="btn" id="btn-hapus">🗑️ Hapus Catatan</button>
+  <div class="status" id="status"></div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
+      authDomain: "nomoromosse.firebaseapp.com",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nomoromosse",
+      storageBucket: "nomoromosse.firebasestorage.app",
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const notaRef = ref(db, 'generator_2d/nota');
+
+    let autoSaveTimer = null;
+    const DEBOUNCE_DELAY = 2000; // 2 detik
+
+    function showMessage(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+
+    function formatTime(date) {
+      return new Intl.DateTimeFormat('id-ID', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).format(date);
+    }
+
+    function updateInfoTime(timeStr = '') {
+      document.getElementById('info-time').textContent = timeStr;
+    }
+
+    // 🔹 Simpan ke Firebase
+    async function saveToFirebase(text) {
+      try {
+        const now = new Date();
+        const payload = text.trim() === '' 
+          ? null // hapus node jika kosong
+          : { 
+              text: text,
+              updatedAt: now.getTime() // opsional: simpan timestamp
+            };
+        
+        if (payload === null) {
+          await remove(notaRef);
+          updateInfoTime("Catatan dihapus.");
+          showMessage("✅ Catatan dihapus dari Firebase.");
+        } else {
+          await set(notaRef, payload);
+          updateInfoTime("Terakhir disimpan: " + formatTime(now));
+          showMessage("✅ Catatan tersimpan.");
+        }
+      } catch (err) {
+        console.error("Firebase save error:", err);
+        showMessage("❌ Gagal menyimpan.");
+      }
+    }
+
+    // 🔹 Auto-save (debounce)
+    function scheduleAutoSave() {
+      if (autoSaveTimer) clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(() => {
+        const text = document.getElementById('nota-text').value;
+        saveToFirebase(text);
+      }, DEBOUNCE_DELAY);
+    }
+
+    // 🔹 Hapus catatan
+    function clearNota() {
+      document.getElementById('nota-text').value = '';
+      saveToFirebase(''); // kirim string kosong → hapus di Firebase
+    }
+
+    // 🔹 Muat catatan dari Firebase
+    function loadNota() {
+      showMessage("Memuat catatan...");
+      onValue(notaRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.text !== undefined) {
+          document.getElementById('nota-text').value = data.text;
+          if (data.updatedAt) {
+            updateInfoTime("Terakhir disimpan: " + formatTime(new Date(data.updatedAt)));
+          }
+          showMessage("✅ Catatan dimuat.");
+        } else {
+          document.getElementById('nota-text').value = '';
+          updateInfoTime("Belum ada catatan.");
+          showMessage("ℹ️ Tidak ada catatan tersimpan.");
+        }
+      }, (error) => {
+        console.error("Gagal muat:", error);
+        showMessage("⚠️ Gagal memuat catatan.");
+      });
+    }
+
+    // 🔹 Event listeners
+    document.getElementById('btn-simpan').addEventListener('click', () => {
+      const text = document.getElementById('nota-text').value;
+      saveToFirebase(text);
+    });
+
+    document.getElementById('btn-hapus').addEventListener('click', () => {
+      if (confirm("Yakin hapus catatan? Tindakan ini tidak bisa dibatalkan.")) {
+        clearNota();
+      }
+    });
+
+    // Auto-save saat ketik
+    document.getElementById('nota-text').addEventListener('input', scheduleAutoSave);
+
+    // Muat saat halaman dibuka
+    loadNota();
+  </script>
+</body>
+</html>
