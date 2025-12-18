@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>6 digit</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 16px;
+      background: #f5f5f5;
+      color: #333;
+      margin: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin: 8px 0 4px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      margin: 16px 0;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .result-box {
+      margin-top: 20px;
+    }
+    .version {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-left: 4px solid #4CAF50;
+    }
+    .version h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+    .control-output {
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      word-break: break-all;
+    }
+    .copy-btn {
+      margin-top: 6px;
+      padding: 6px 12px;
+      font-size: 14px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .copy-btn:hover {
+      background: #0b7dda;
+    }
+    .error {
+      color: red;
+      margin-top: 8px;
+      font-weight: bold;
+    }
+    .radio-group {
+      margin: 8px 0;
+    }
+    .radio-group label {
+      font-weight: normal;
+      display: inline-block;
+      margin-right: 12px;
+    }
+
+    /* Navigasi */
+    .nav-buttons {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+    .nav-home {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #6c757d;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .nav-home:hover {
+      background: #5a6268;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>6 digit</h2>
+    
+    <label for="result6_1">6 Digit Result Terakhir (Pertama)</label>
+    <input type="text" id="result6_1" placeholder="Contoh: 781245" maxlength="6" />
+    
+    <label for="result6_2">6 Digit Result Sebelumnya (Kedua - Opsional)</label>
+    <input type="text" id="result6_2" placeholder="Contoh: 349012" maxlength="6" />
+    
+    <div id="error" class="error"></div>
+    
+    <button id="generateBtn">Generate Angka Kontrol</button>
+    
+    <div id="resultContainer" class="result-box" style="display:none;">
+      <!-- Versi Dasar -->
+      <div class="version">
+        <h3>Versi A: Digit Unik dari Result</h3>
+        <div class="control-output" id="versionA"></div>
+        <button class="copy-btn" onclick="copyToClipboard('versionA')">Copy Versi A</button>
+      </div>
+      <div class="version">
+        <h3>Versi B: Penjumlahan + Modulus</h3>
+        <div class="control-output" id="versionB"></div>
+        <button class="copy-btn" onclick="copyToClipboard('versionB')">Copy Versi B</button>
+      </div>
+      <div class="version">
+        <h3>Versi C: Digit + Tetangga (±1)</h3>
+        <div class="control-output" id="versionC"></div>
+        <button class="copy-btn" onclick="copyToClipboard('versionC')">Copy Versi C</button>
+      </div>
+
+      <!-- Versi Gabungan -->
+      <div class="version" style="border-left-color: #FF9800;">
+        <h3>Gabungan Seri (3/3): Ada di Semua Versi</h3>
+        <div class="control-output" id="versionSeri"></div>
+        <button class="copy-btn" onclick="copyToClipboard('versionSeri')">Copy Seri</button>
+      </div>
+      <div class="version" style="border-left-color: #9C27B0;">
+        <h3>Gabungan ≥2 Versi: Muncul di Minimal 2 Versi</h3>
+        <div class="control-output" id="versionMin2"></div>
+        <button class="copy-btn" onclick="copyToClipboard('versionMin2')">Copy ≥2 Versi</button>
+      </div>
+
+      <!-- Final 5 Digit -->
+      <div class="version" style="border-left-color: #E91E63;">
+        <h3>Angka Kontrol Final (5 Digit)</h3>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="reduceOption" value="excludeFirst" checked />
+            Opsi 1: Buang digit awal result pertama
+          </label>
+          <label>
+            <input type="radio" name="reduceOption" value="random" />
+            Opsi 2: Pilih acak
+          </label>
+        </div>
+        <div class="control-output" id="versionFinal"></div>
+        <button class="copy-btn" onclick="copyToClipboard('versionFinal')">Copy Final</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔗 Navigasi -->
+  <div class="nav-buttons">
+    <a href="index.html" class="nav-home">🏠 Kembali ke Beranda</a>
+  </div>
+
+  <script>
+    // === FUNGSI VERSI DASAR (sekarang menerima array result) ===
+    function generateControlVersionA(results) {
+      let allDigits = "";
+      for (const r of results) {
+        if (/^\d{6}$/.test(r)) allDigits += r;
+      }
+      if (!allDigits) return "";
+      return [...new Set(allDigits.split(""))].sort().join("");
+    }
+
+    function generateControlVersionB(results) {
+      let allDigits = "";
+      for (const r of results) {
+        if (/^\d{6}$/.test(r)) allDigits += r;
+      }
+      if (!allDigits) return "";
+      
+      // Ambil maksimal 6 digit terakhir (prioritaskan result terbaru)
+      const digits6 = allDigits.slice(-6).padStart(6, '0');
+      const [A, B, C, D, E, F] = digits6.split("").map(Number);
+      
+      const calcDigits = new Set([
+        (A + B) % 10,
+        (C + D) % 10,
+        (E + F) % 10,
+        (A + C + E) % 10,
+        (B + D + F) % 10,
+        (A + D) % 10,
+        (B + E) % 10
+      ]);
+      return [...calcDigits].sort().join("");
+    }
+
+    function generateControlVersionC(results) {
+      const digits = new Set();
+      for (const r of results) {
+        if (!/^\d{6}$/.test(r)) continue;
+        for (const char of r) {
+          const d = parseInt(char, 10);
+          digits.add((d - 1 + 10) % 10);
+          digits.add(d);
+          digits.add((d + 1) % 10);
+        }
+      }
+      return [...digits].sort().join("");
+    }
+
+    // === FUNGSI GABUNGAN ===
+    function getCommonInAll(versions) {
+      const setA = new Set(versions.A);
+      const setB = new Set(versions.B);
+      const setC = new Set(versions.C);
+      return [...setA].filter(d => setB.has(d) && setC.has(d)).sort().join("");
+    }
+
+    function getCommonInAtLeastTwo(versions) {
+      const count = {};
+      for (const v of [versions.A, versions.B, versions.C]) {
+        for (const d of new Set(v)) {
+          count[d] = (count[d] || 0) + 1;
+        }
+      }
+      return Object.keys(count)
+        .filter(d => count[d] >= 2)
+        .sort()
+        .join("");
+    }
+
+    // === FUNGSI REDUKSI KE 5 DIGIT ===
+    function reduceToFiveByExcludingFirstDigit(combinedDigits, firstDigit) {
+      let filtered = combinedDigits.split("").filter(d => d !== firstDigit);
+      if (filtered.length > 5) {
+        filtered = filtered.slice(0, 5);
+      } else if (filtered.length < 5) {
+        for (const d of combinedDigits) {
+          if (filtered.length >= 5) break;
+          if (!filtered.includes(d)) filtered.push(d);
+        }
+      }
+      return filtered.join("");
+    }
+
+    function reduceToFiveByRandom(combinedDigits) {
+      let arr = [...new Set(combinedDigits.split(""))];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr.slice(0, 5).sort().join("");
+    }
+
+    // === UTILITAS ===
+    function copyToClipboard(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      if (!text || text.includes("(tidak ada")) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = "Tersalin!";
+        setTimeout(() => btn.innerText = originalText, 1500);
+      }).catch(err => {
+        console.warn("Gagal menyalin:", err);
+      });
+    }
+
+    // === EKSEKUSI UTAMA ===
+    document.getElementById("generateBtn").addEventListener("click", () => {
+      const input1 = document.getElementById("result6_1").value.trim();
+      const input2 = document.getElementById("result6_2").value.trim();
+      const errorEl = document.getElementById("error");
+      const resultContainer = document.getElementById("resultContainer");
+
+      errorEl.textContent = "";
+      resultContainer.style.display = "none";
+
+      // Validasi: minimal result pertama harus valid
+      if (!/^\d{6}$/.test(input1)) {
+        errorEl.textContent = "Result pertama harus 6 digit angka!";
+        return;
+      }
+
+      // Kumpulkan result yang valid
+      const results = [input1];
+      if (/^\d{6}$/.test(input2)) results.push(input2);
+
+      const firstDigit = input1[0]; // selalu ambil dari result pertama
+
+      const base = {
+        A: generateControlVersionA(results),
+        B: generateControlVersionB(results),
+        C: generateControlVersionC(results)
+      };
+
+      const controls = {
+        A: base.A,
+        B: base.B,
+        C: base.C,
+        Seri: getCommonInAll(base),
+        Minimal2: getCommonInAtLeastTwo(base)
+      };
+
+      document.getElementById("versionA").innerText = controls.A;
+      document.getElementById("versionB").innerText = controls.B;
+      document.getElementById("versionC").innerText = controls.C;
+      document.getElementById("versionSeri").innerText = controls.Seri || "(tidak ada)";
+      document.getElementById("versionMin2").innerText = controls.Minimal2 || "(tidak ada)";
+
+      let source = controls.Minimal2;
+      if (source.length === 0) {
+        document.getElementById("versionFinal").innerText = "(tidak ada data)";
+      } else if (source.length <= 5) {
+        document.getElementById("versionFinal").innerText = source;
+      } else {
+        const option = document.querySelector('input[name="reduceOption"]:checked').value;
+        let finalDigits;
+        if (option === "excludeFirst") {
+          finalDigits = reduceToFiveByExcludingFirstDigit(source, firstDigit);
+        } else {
+          finalDigits = reduceToFiveByRandom(source);
+        }
+        document.getElementById("versionFinal").innerText = finalDigits;
+      }
+
+      resultContainer.style.display = "block";
+    });
+
+    // Format input otomatis
+    document.getElementById("result6_1").addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    });
+    document.getElementById("result6_2").addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    });
+  </script>
+</body>
+</html>
