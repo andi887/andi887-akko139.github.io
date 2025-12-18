@@ -197,7 +197,6 @@
       return Array.from({length: 100}, (_, i) => i.toString().padStart(2, '0'));
     }
 
-    // ─── RUMUS O (Trigonometri) ──────────────────────────────────────────
     function rumusSinCosSliding(result4d) {
       const AB = parseInt(result4d.substring(0, 2), 10);
       const CD = parseInt(result4d.substring(2, 4), 10);
@@ -301,25 +300,21 @@
         }
       }
 
-      // Identifikasi twin
       const isTwin = (num) => num[0] === num[1];
       const twinNumbers = ALL_2D.filter(isTwin);
 
-      // Angka bersih = hitCount 0, TAPI kecualikan twin
       const angkaBersih = ALL_2D.filter(num => hitCount[num] === 0 && !isTwin(num));
       const out1x = ALL_2D.filter(num => hitCount[num] === 1 && !isTwin(num));
       const out2x = ALL_2D.filter(num => hitCount[num] === 2 && !isTwin(num));
       const out3x = ALL_2D.filter(num => hitCount[num] === 3 && !isTwin(num));
       const out4x = ALL_2D.filter(num => hitCount[num] >= 4 && !isTwin(num));
 
-      // Twin khusus: tampilkan semua twin, kategorikan sesuai hitCount
       const twinBersih = twinNumbers.filter(num => hitCount[num] === 0);
       const twinOut1x = twinNumbers.filter(num => hitCount[num] === 1);
       const twinOut2x = twinNumbers.filter(num => hitCount[num] === 2);
       const twinOut3x = twinNumbers.filter(num => hitCount[num] === 3);
       const twinOut4x = twinNumbers.filter(num => hitCount[num] >= 4);
 
-      // Format akhir: semua angka bersih + twin (dalam satu bagian)
       const finalList = [
         ...angkaBersih,
         ...twinBersih,
@@ -343,7 +338,6 @@
       document.getElementById('final-result').textContent = text;
       document.getElementById('hasil-rampa40').style.display = 'block';
 
-      // Simpan ke localStorage untuk fitur5 (ngai)
       const savedData = {
         timestamp: new Date().toISOString(),
         resultsHTML: document.querySelector('#hasil-rampa40').outerHTML
@@ -351,11 +345,7 @@
       localStorage.setItem('fitur2_data', JSON.stringify(savedData));
     }
 
-    // ─── FUNGSI LAINNYA (FIREBASE, PASANG EVENT) ─────────────────────────
-    function showMessage(msg) {
-      document.getElementById('status').textContent = msg;
-    }
-
+    // ─── FUNGSI UTAMA: LOAD MARKET DATA (DIPERBAIKI) ─────────────────────
     async function loadMarketData(marketKey) {
       showMessage("Mengambil data " + marketKey + "...");
       const marketRef = ref(db, 'fitur1/markets/' + marketKey);
@@ -372,25 +362,44 @@
         });
 
         const data = snapshot.val();
-        const results = Array.isArray(data) ? data : (data?.results || []);
+        let results = [];
 
-        if (!Array.isArray(results) || results.length < 2) {
+        if (data === null || data === undefined) {
+          // Tidak ada data
+        } else if (Array.isArray(data)) {
+          results = data.filter(v => typeof v === 'string' && /^\d{4}$/.test(v));
+        } else if (typeof data === 'object') {
+          // Handle: { "-Nxyz": "1234", ... }
+          const entries = Object.entries(data)
+            .filter(([k, v]) => typeof v === 'string' && /^\d{4}$/.test(v))
+            .sort((a, b) => a[0].localeCompare(b[0])); // Urutkan berdasarkan kunci Firebase
+          results = entries.map(([k, v]) => v);
+        } else if (typeof data === 'string' && /^\d{4}$/.test(data)) {
+          results = [data];
+        }
+
+        if (results.length < 2) {
           showMessage("⚠️ Data " + marketKey + " tidak cukup (min. 2 hasil).");
           document.getElementById('prev-result').value = '';
           document.getElementById('curr-result').value = '';
           return;
         }
 
-        const prev4D = results[results.length - 2] || '';
-        const curr4D = results[results.length - 1] || '';
+        const prev4D = results[results.length - 2];
+        const curr4D = results[results.length - 1];
 
         document.getElementById('prev-result').value = prev4D;
         document.getElementById('curr-result').value = curr4D;
-        showMessage("✅ Data " + marketKey + " dimuat.");
+        showMessage("✅ Data " + marketKey + " dimuat (" + results.length + " hasil).");
       } catch (err) {
         console.error("Gagal muat ", err);
         showMessage("❌ Gagal muat data " + marketKey);
       }
+    }
+
+    // ─── PASANG EVENT ────────────────────────────────────────────────────
+    function showMessage(msg) {
+      document.getElementById('status').textContent = msg;
     }
 
     document.getElementById('market-select').addEventListener('change', function () {
@@ -419,7 +428,6 @@
         return;
       }
 
-      // Jalankan logika rampa40 hanya berdasarkan curr (sesuai standar)
       const hasil = hitungRampa40(curr);
       tampilkanHasilRampa40(hasil);
       showMessage("✅ Ramp40 selesai.");
