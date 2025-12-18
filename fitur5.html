@@ -17,7 +17,6 @@
       margin: 0 0 16px;
     }
 
-    /* 🔙 Kembali ke Beranda — inline style, konsisten dengan fitur2 & fitur4 */
     .back-home {
       text-align: center;
       margin: 12px 0;
@@ -39,21 +38,24 @@
     .btn {
       width: 100%;
       padding: 12px;
-      background: #673ab7;
-      color: white;
       border: none;
       border-radius: 6px;
       font-size: 16px;
       cursor: pointer;
       margin: 12px 0;
+      font-weight: bold;
     }
+    #btn-refresh { background: #673ab7; color: white; }
+    #btn-ok { background: #4CAF50; color: white; display: none; }
+
     .result-box {
       background: white;
       padding: 12px;
       border-radius: 8px;
-      margin-top: 15px;
+      margin-top: 12px;
       font-family: monospace;
       white-space: pre-wrap;
+      border: 1px solid #ddd;
     }
     .section {
       margin-top: 16px;
@@ -69,27 +71,59 @@
       min-height: 20px;
       margin: 8px 0;
     }
+    #ngai-result {
+      display: none;
+      background: #e8f5e9;
+      border-color: #4caf50;
+    }
+    .source-title {
+      background: #f0f0f0;
+      padding: 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin: 8px 0 4px;
+    }
   </style>
 </head>
 <body>
   <h1>🔮 ngai</h1>
 
-  <!-- 🔙 Kembali ke Beranda -->
   <div class="back-home">
     <a href="index.html">🔙 Kembali ke Beranda</a>
   </div>
 
-  <button class="btn" id="btn-refresh">🔄 Muat & Gabungkan Data</button>
+  <button class="btn" id="btn-refresh">🔄 Muat Data dari Fitur 2, 3, 4</button>
+  <button class="btn" id="btn-ok">✅ OK – Gabungkan & Tampilkan Hasil</button>
   <div class="status" id="status"></div>
 
+  <!-- Tampilan sementara: 3 sumber -->
+  <div id="preview-section" style="display:none;">
+    <div class="source-title">📊 Sumber Data</div>
+    
+    <div class="section">
+      <div class="title">🔹 Fitur 2 (rampa40)</div>
+      <div class="result-box" id="preview-r">-</div>
+    </div>
+
+    <div class="section">
+      <div class="title">🔹 Fitur 3 (saringan)</div>
+      <div class="result-box" id="preview-s">-</div>
+    </div>
+
+    <div class="section">
+      <div class="title">🔹 Fitur 4 (kamar)</div>
+      <div class="result-box" id="preview-k">-</div>
+    </div>
+  </div>
+
+  <!-- Hasil akhir -->
   <div class="section">
-    <div class="title">📌 Rangkuman NGAI (Angka yang Muncul di ≥2 Sumber)</div>
-    <div class="result-box" id="ngai-result">Belum ada data. Silakan generate di fitur lain lalu refresh.</div>
+    <div class="title">📌 Rangkuman NGAI (≥2 Sumber)</div>
+    <div class="result-box" id="ngai-result">Klik "OK" setelah data dimuat.</div>
   </div>
 
   <!-- Firebase SDK -->
   <script type="module">
-    // 🔹 Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -107,7 +141,6 @@
     const db = getDatabase(app);
     const inputRef = ref(db, 'generator_2d/inputs');
 
-    // 🔹 Konstanta
     const SHIO_TO_2D = {
       1: ["01","13","25","37","49","61","73","85","97"],
       2: ["02","14","26","38","50","62","74","86","98"],
@@ -125,20 +158,18 @@
 
     const ALL_2D = Array.from({length:100}, (_,i) => i.toString().padStart(2,'0'));
 
-    // 🔹 Helper
+    // Simpan data sementara
+    let cachedR = null;
+    let cachedS = null;
+    let cachedK = null;
+
     function showMessage(msg) {
       document.getElementById('status').textContent = msg;
     }
 
     function parseDigitParts(input) {
       if (!input?.trim()) return [];
-      return input
-        .split('/')
-        .map(s => s.trim().replace(/\D/g, ''))
-        .filter(Boolean)
-        .join('')
-        .split('')
-        .filter(d => d >= '0' && d <= '9');
+      return input.split('/').map(s => s.trim().replace(/\D/g, '')).filter(Boolean).join('').split('').filter(d => d >= '0' && d <= '9');
     }
 
     function parseRange(rangeStr) {
@@ -155,191 +186,144 @@
 
     function parseShioParts(input) {
       if (!input?.trim()) return [];
-      return input
-        .split('/')
-        .map(s => parseInt(s.trim().replace(/\D/g, ''), 10))
-        .filter(n => !isNaN(n) && n >= 1 && n <= 12);
+      return input.split('/').map(s => parseInt(s.trim().replace(/\D/g, ''), 10)).filter(n => !isNaN(n) && n >= 1 && n <= 12);
     }
 
-    function getShioNumbers(shio) {
-      return SHIO_TO_2D[shio] || [];
-    }
+    function getShioNumbers(shio) { return SHIO_TO_2D[shio] || []; }
 
-    // 🔹 Ambil Himpunan S dari Firebase (Fitur 3)
     function getHimpunanS(firebaseData) {
       if (!firebaseData) return new Set();
-
-      const A = firebaseData.A || '';
-      const B = firebaseData.B || '';
-      const C = firebaseData.C || '';
-      const D = firebaseData.D || '';
-      const E = firebaseData.E || '';
-
-      const ekorLemahSet = new Set();
-      parseDigitParts(B).forEach(d => {
-        for (let i = 0; i <= 9; i++) ekorLemahSet.add(i + '' + d);
-      });
-
-      const kepalaLemahSet = new Set();
-      parseDigitParts(C).forEach(d => {
-        for (let i = 0; i <= 9; i++) kepalaLemahSet.add(d + '' + i);
-      });
-
+      const A = firebaseData.A || '', B = firebaseData.B || '', C = firebaseData.C || '', D = firebaseData.D || '', E = firebaseData.E || '';
+      const ekorLemahSet = new Set(); parseDigitParts(B).forEach(d => { for (let i = 0; i <= 9; i++) ekorLemahSet.add(i + '' + d); });
+      const kepalaLemahSet = new Set(); parseDigitParts(C).forEach(d => { for (let i = 0; i <= 9; i++) kepalaLemahSet.add(d + '' + i); });
       const jarakLemahSet = new Set(parseRange(D));
-      const shioLemahSet = new Set();
-      parseShioParts(E).forEach(s => getShioNumbers(s).forEach(n => shioLemahSet.add(n)));
-
-      let versions = [];
-      if (A.trim()) {
-        versions = A.split('/').map(v => v.trim().replace(/\D/g, '')).filter(v => v);
-      }
+      const shioLemahSet = new Set(); parseShioParts(E).forEach(s => getShioNumbers(s).forEach(n => shioLemahSet.add(n)));
+      let versions = A.trim() ? A.split('/').map(v => v.trim().replace(/\D/g, '')).filter(v => v) : [];
       const versionSets = versions.map(v => new Set(v.split('')));
-
-      const hitCount = {};
-      for (const num of ALL_2D) {
-        let count = 0;
+      const hitCount = {}; for (const num of ALL_2D) { let count = 0;
         if (ekorLemahSet.has(num)) count++;
         if (kepalaLemahSet.has(num)) count++;
         if (jarakLemahSet.has(num)) count++;
         if (shioLemahSet.has(num)) count++;
-        for (const vs of versionSets) {
-          if (!vs.has(num[0]) && !vs.has(num[1])) count++;
-        }
+        for (const vs of versionSets) if (!vs.has(num[0]) && !vs.has(num[1])) count++;
         hitCount[num] = count;
       }
-
-      // Himpunan S = Angka Bersih (count=0) + Angka Khusus (twin)
       const angkaBersih = ALL_2D.filter(num => hitCount[num] === 0);
       const twin = ALL_2D.filter(num => num[0] === num[1]);
       return new Set([...angkaBersih, ...twin]);
     }
 
-    // 🔹 Ambil Himpunan R dari localStorage (Fitur 2: rampa40)
     function getHimpunanR() {
       const saved = localStorage.getItem('fitur2_data');
       if (!saved) return null;
-
       try {
         const data = JSON.parse(saved);
         if (!data.resultsHTML) return null;
-
         const temp = document.createElement('div');
         temp.innerHTML = data.resultsHTML;
-        // Ambil bagian Rangkuman Final (biasanya bagian terakhir sebelum copy button)
-        const sections = temp.querySelectorAll('.section');
-        if (sections.length === 0) return null;
-
-        // Cari bagian yang mengandung "Rangkuman Final"
         let finalSection = null;
+        const sections = temp.querySelectorAll('.section');
         for (let sec of sections) {
           if (sec.querySelector('h2')?.textContent.includes('Rangkuman Final')) {
-            finalSection = sec;
-            break;
+            finalSection = sec; break;
           }
         }
-        if (!finalSection) {
-          // fallback: ambil bagian terakhir
-          finalSection = sections[sections.length - 1];
-        }
-
+        if (!finalSection) finalSection = sections[sections.length - 1];
         const valueDiv = finalSection.querySelector('.value');
         if (valueDiv) {
           let text = valueDiv.textContent.trim();
           if (text.endsWith('#')) text = text.slice(0, -1);
-          const list = text.split('*').filter(x => x.length === 2);
-          return new Set(list);
+          return new Set(text.split('*').filter(x => x.length === 2));
         }
-      } catch (e) {
-        console.error('Gagal ekstrak Himpunan R:', e);
-      }
+      } catch (e) { console.error('Gagal ekstrak R:', e); }
       return null;
     }
 
-    // 🔹 Ambil Himpunan K dari localStorage (Fitur 4: kamar)
     function getHimpunanK() {
       const saved = localStorage.getItem('kamar_data');
       if (!saved) return null;
-
       try {
         const data = JSON.parse(saved);
         if (!data.hasil) return null;
-
         const kamarKuat = [];
         for (let k = 1; k <= 12; k++) {
-          // Jika nilainya "—" atau kosong → kamar kuat
           if (!data.hasil[k] || data.hasil[k] === "—") {
             kamarKuat.push(k);
           }
         }
-
         const himpunanK = new Set();
-        kamarKuat.forEach(k => {
-          const nums = SHIO_TO_2D[k] || [];
-          nums.forEach(n => himpunanK.add(n));
-        });
+        kamarKuat.forEach(k => { (SHIO_TO_2D[k] || []).forEach(n => himpunanK.add(n)); });
         return himpunanK;
-      } catch (e) {
-        console.error('Gagal ekstrak Himpunan K:', e);
-      }
+      } catch (e) { console.error('Gagal ekstrak K:', e); }
       return null;
     }
 
-    // 🔹 Gabungkan & Filter (≥2 sumber)
-    function gabungkanDanFilter(R, S, K) {
-      if (!R || !S || !K) {
-        let msg = "⚠️ Data tidak lengkap:\n";
-        if (!R) msg += "- Fitur 2 (rampa40)\n";
-        if (!S) msg += "- Fitur 3 (saringan)\n";
-        if (!K) msg += "- Fitur 4 (kamar)";
-        return msg;
-      }
-
-      const count = {};
-      for (const num of ALL_2D) count[num] = 0;
-
-      R.forEach(n => count[n]++);
-      S.forEach(n => count[n]++);
-      K.forEach(n => count[n]++);
-
-      const hasil = ALL_2D.filter(num => count[num] >= 2).sort();
-      return hasil.length ? hasil.join('*') + '#' : "❌ Tidak ada angka yang muncul di ≥2 sumber.";
+    function formatSet(s) {
+      return s && s.size > 0 ? Array.from(s).sort().join('*') + '#' : '-';
     }
 
-    // 🔹 Refresh utama
+    // 🔹 Refresh: muat & tampilkan preview
     async function refreshData() {
       showMessage("Mengambil data...");
 
-      // Ambil data Firebase (Fitur 3)
       let firebaseData = null;
       try {
         const snapshot = await new Promise((resolve, reject) => {
           const timeout = setTimeout(() => reject(new Error("Timeout")), 5000);
-          onValue(inputRef, (snap) => {
-            clearTimeout(timeout);
-            resolve(snap);
-          }, (err) => {
-            clearTimeout(timeout);
-            reject(err);
-          });
+          onValue(inputRef, (snap) => { clearTimeout(timeout); resolve(snap); }, (err) => { clearTimeout(timeout); reject(err); });
         });
         firebaseData = snapshot.val();
-      } catch (err) {
-        console.warn("Gagal ambil Firebase:", err);
-      }
+      } catch (err) { console.warn("Firebase error:", err); }
 
       const R = getHimpunanR();
       const S = getHimpunanS(firebaseData);
       const K = getHimpunanK();
 
-      const hasil = gabungkanDanFilter(R, S, K);
-      document.getElementById('ngai-result').textContent = hasil;
-      showMessage("✅ Data NGAI diperbarui.");
+      cachedR = R;
+      cachedS = S;
+      cachedK = K;
+
+      // Tampilkan preview
+      document.getElementById('preview-r').textContent = formatSet(R);
+      document.getElementById('preview-s').textContent = formatSet(S);
+      document.getElementById('preview-k').textContent = formatSet(K);
+
+      document.getElementById('preview-section').style.display = 'block';
+      document.getElementById('btn-ok').style.display = 'block';
+
+      // Sembunyikan hasil akhir
+      document.getElementById('ngai-result').style.display = 'none';
+      document.getElementById('ngai-result').textContent = 'Klik "OK" untuk gabungkan.';
+
+      showMessage("✅ Data dimuat. Klik OK untuk proses.");
     }
 
-    // 🔹 Event
-    document.getElementById('btn-refresh').addEventListener('click', refreshData);
+    // 🔹 OK: gabungkan & tampilkan hasil akhir
+    function processOk() {
+      if (!cachedR || !cachedS || !cachedK) {
+        document.getElementById('ngai-result').textContent = "❌ Data tidak lengkap. Silakan refresh.";
+        document.getElementById('ngai-result').style.display = 'block';
+        return;
+      }
 
-    // 🔹 Muat otomatis
+      const count = {};
+      for (const num of ALL_2D) count[num] = 0;
+      cachedR.forEach(n => count[n]++);
+      cachedS.forEach(n => count[n]++);
+      cachedK.forEach(n => count[n]++);
+
+      const hasil = ALL_2D.filter(num => count[num] >= 2).sort();
+      const text = hasil.length ? hasil.join('*') + '#' : "❌ Tidak ada angka di ≥2 sumber.";
+
+      document.getElementById('ngai-result').textContent = text;
+      document.getElementById('ngai-result').style.display = 'block';
+      showMessage("✅ Hasil NGAI siap.");
+    }
+
+    document.getElementById('btn-refresh').addEventListener('click', refreshData);
+    document.getElementById('btn-ok').addEventListener('click', processOk);
+
+    // Muat otomatis saat halaman dibuka
     refreshData();
   </script>
 </body>
