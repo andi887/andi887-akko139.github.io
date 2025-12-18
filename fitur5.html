@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ngai</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.4em;
+      margin: 0 0 16px;
+    }
+    .back-home {
+      text-align: center;
+      margin: 12px 0;
+    }
+    .back-home a {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #4285f4;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.95em;
+    }
+    .back-home a:hover {
+      background: #3367d6;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #673ab7;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 12px 0;
+    }
+    .result-box {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .section {
+      margin-top: 16px;
+    }
+    .title {
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 6px;
+    }
+    .status {
+      text-align: center;
+      color: #e74c3c;
+      min-height: 20px;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔮 ngai</h1>
+
+  <div class="back-home">
+    <a href="index.html">🔙 Kembali ke Beranda</a>
+  </div>
+
+  <button class="btn" id="btn-refresh">🔄 Muat & Gabungkan Data</button>
+  <div class="status" id="status"></div>
+
+  <div class="section">
+    <div class="title">📌 Rangkuman NGAI (Gabungan Fitur 2 + 3 + 4)</div>
+    <div class="result-box" id="ngai-result">Belum ada data. Silakan generate di fitur lain lalu refresh.</div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    // 🔹 Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
+      authDomain: "nomoromosse.firebaseapp.com",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nomoromosse",
+      storageBucket: "nomoromosse.firebasestorage.app",
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const inputRef = ref(db, 'generator_2d/inputs');
+
+    // 🔹 Konstanta
+    const SHIO_TO_2D = {
+      1: ["01","13","25","37","49","61","73","85","97"],
+      2: ["02","14","26","38","50","62","74","86","98"],
+      3: ["03","15","27","39","51","63","75","87","99"],
+      4: ["04","16","28","40","52","64","76","88","00"],
+      5: ["05","17","29","41","53","65","77","89"],
+      6: ["06","18","30","42","54","66","78","90"],
+      7: ["07","19","31","43","55","67","79","91"],
+      8: ["08","20","32","44","56","68","80","92"],
+      9: ["09","21","33","45","57","69","81","93"],
+      10: ["10","22","34","46","58","70","82","94"],
+      11: ["11","23","35","47","59","71","83","95"],
+      12: ["12","24","36","48","60","72","84","96"]
+    };
+
+    const TWIN_NUMBERS = new Set(["00","11","22","33","44","55","66","77","88","99"]);
+    const ALL_2D = Array.from({length:100}, (_,i) => i.toString().padStart(2,'0'));
+
+    // 🔹 Helper
+    function showMessage(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+
+    function parseDigitParts(input) {
+      if (!input?.trim()) return [];
+      return input
+        .split('/')
+        .map(s => s.trim().replace(/\D/g, ''))
+        .filter(Boolean)
+        .join('')
+        .split('')
+        .filter(d => d >= '0' && d <= '9');
+    }
+
+    function parseRange(rangeStr) {
+      const clean = rangeStr?.trim() || '';
+      if (!clean.includes('-')) return [];
+      const [start, end] = clean.split('-').map(Number);
+      if (isNaN(start) || isNaN(end)) return [];
+      const res = [];
+      for (let i = Math.max(0, start); i <= Math.min(99, end); i++) {
+        res.push(i.toString().padStart(2, '0'));
+      }
+      return res;
+    }
+
+    function parseShioParts(input) {
+      if (!input?.trim()) return [];
+      return input
+        .split('/')
+        .map(s => parseInt(s.trim().replace(/\D/g, ''), 10))
+        .filter(n => !isNaN(n) && n >= 1 && n <= 12);
+    }
+
+    function getShioNumbers(shio) {
+      return SHIO_TO_2D[shio] || [];
+    }
+
+    // 🔹 Hitung dari data Fitur 3 (Firebase)
+    function hitungDariFitur3(data) {
+      const A = data.A || '';
+      const B = data.B || '';
+      const C = data.C || '';
+      const D = data.D || '';
+      const E = data.E || '';
+
+      const ekorLemahSet = new Set();
+      parseDigitParts(B).forEach(d => {
+        for (let i = 0; i <= 9; i++) ekorLemahSet.add(i + '' + d);
+      });
+
+      const kepalaLemahSet = new Set();
+      parseDigitParts(C).forEach(d => {
+        for (let i = 0; i <= 9; i++) kepalaLemahSet.add(d + '' + i);
+      });
+
+      const jarakLemahSet = new Set(parseRange(D));
+      const shioLemahSet = new Set();
+      parseShioParts(E).forEach(s => getShioNumbers(s).forEach(n => shioLemahSet.add(n)));
+
+      let versions = [];
+      if (A.trim()) {
+        versions = A.split('/').map(v => v.trim().replace(/\D/g, '')).filter(v => v);
+      }
+      const versionSets = versions.map(v => new Set(v.split('')));
+
+      const hitCount = {};
+      for (const num of ALL_2D) {
+        let count = 0;
+        if (ekorLemahSet.has(num)) count++;
+        if (kepalaLemahSet.has(num)) count++;
+        if (jarakLemahSet.has(num)) count++;
+        if (shioLemahSet.has(num)) count++;
+        for (const vs of versionSets) {
+          if (!vs.has(num[0]) && !vs.has(num[1])) count++;
+        }
+        hitCount[num] = count;
+      }
+
+      const angkaBersih = ALL_2D.filter(num => hitCount[num] === 0);
+      const out1x = ALL_2D.filter(num => hitCount[num] === 1);
+      const out2x = ALL_2D.filter(num => hitCount[num] === 2);
+      const out3x = ALL_2D.filter(num => hitCount[num] === 3);
+      const out4x = ALL_2D.filter(num => hitCount[num] === 4);
+
+      return {
+        angkaBersih: new Set(angkaBersih),
+        out1x: new Set([...out1x, ...out2x, ...out3x, ...out4x]), // gabung 1x–4x
+        allOut: new Set([...out1x, ...out2x, ...out3x, ...out4x, ...ALL_2D.filter(n => hitCount[n] > 4)])
+      };
+    }
+
+    // 🔹 Hitung dari data Fitur 2 (localStorage)
+    function hitungDariFitur2() {
+      const saved = localStorage.getItem('fitur2_data');
+      if (!saved) return null;
+
+      try {
+        const data = JSON.parse(saved);
+        if (!data.resultsHTML) return null;
+
+        // Ekstrak dari HTML (cara cepat, karena tidak disimpan sebagai data mentah)
+        const temp = document.createElement('div');
+        temp.innerHTML = data.resultsHTML;
+        const finalDiv = temp.querySelector('.section:last-of-type .value');
+        if (finalDiv) {
+          let text = finalDiv.textContent.trim();
+          if (text.endsWith('#')) text = text.slice(0, -1);
+          const list = text.split('*').filter(x => x.length === 2);
+          return new Set(list);
+        }
+      } catch (e) {
+        console.error('Gagal ekstrak Fitur 2:', e);
+      }
+      return null;
+    }
+
+    // 🔹 Hitung dari data Fitur 4 (localStorage)
+    function hitungDariFitur4() {
+      const saved = localStorage.getItem('kamar_data');
+      if (!saved) return null;
+
+      try {
+        const data = JSON.parse(saved);
+        if (!data.hasil) return null;
+
+        const kamarLemah = [];
+        for (let k = 1; k <= 12; k++) {
+          if (data.hasil[k]) kamarLemah.push(k);
+        }
+
+        // Dapatkan 2D lemah
+        const lemahSet = new Set();
+        kamarLemah.forEach(k => {
+          (SHIO_TO_2D[k] || []).forEach(n => lemahSet.add(n));
+        });
+
+        // 2D kuat = bukan lemah
+        const kuatSet = new Set(ALL_2D.filter(n => !lemahSet.has(n)));
+        return kuatSet;
+      } catch (e) {
+        console.error('Gagal ekstrak Fitur 4:', e);
+      }
+      return null;
+    }
+
+    // 🔹 Gabungkan Semua
+    function gabungkanData(f2Set, f3Data, f4Set) {
+      if (!f2Set) return "⚠️ Data Fitur 2 belum tersedia.";
+      if (!f3Data) return "⚠️ Data Fitur 3 belum tersedia.";
+      if (!f4Set) return "⚠️ Data Fitur 4 belum tersedia.";
+
+      // NGAI = F2 ∩ (F3.angkaBersih ∪ F3.out1x) ∩ F4
+      const kandidat1 = new Set([...f2Set].filter(x => f3Data.angkaBersih.has(x) || f3Data.out1x.has(x)));
+      const hasil = [...kandidat1].filter(x => f4Set.has(x)).sort();
+
+      return hasil.length ? hasil.join('*') + '#' : "❌ Tidak ada angka yang lolos semua filter.";
+    }
+
+    // 🔹 Refresh Utama
+    async function refreshData() {
+      showMessage("Mengambil data...");
+
+      // Ambil dari Firebase (Fitur 3)
+      let f3Data = null;
+      try {
+        const snapshot = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error("Timeout")), 5000);
+          onValue(inputRef, (snap) => {
+            clearTimeout(timeout);
+            resolve(snap);
+          }, (err) => {
+            clearTimeout(timeout);
+            reject(err);
+          });
+        });
+        const val = snapshot.val();
+        if (val) {
+          f3Data = hitungDariFitur3(val);
+        }
+      } catch (err) {
+        console.error("Gagal ambil Firebase:", err);
+      }
+
+      // Ambil dari localStorage
+      const f2Set = hitungDariFitur2();
+      const f4Set = hitungDariFitur4();
+
+      // Gabungkan
+      const hasil = gabungkanData(f2Set, f3Data, f4Set);
+      document.getElementById('ngai-result').textContent = hasil;
+      showMessage("✅ Data diperbarui.");
+    }
+
+    // 🔹 Event
+    document.getElementById('btn-refresh').addEventListener('click', refreshData);
+
+    // 🔹 Muat otomatis saat halaman dibuka
+    refreshData();
+  </script>
+</body>
+</html>
