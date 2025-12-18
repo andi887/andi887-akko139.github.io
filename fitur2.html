@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generator Togel + Kamar Lemah (28 Kontrol)</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 12px;
+      background: #f8f9fa;
+      color: #212529;
+    }
+    .container {
+      max-width: 100%;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.4em;
+      margin: 0 0 16px;
+      color: #1a365d;
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .nav-buttons a {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      background: #4285f4;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.95em;
+    }
+    .nav-buttons a:hover {
+      opacity: 0.9;
+    }
+    .nav-home { background: #4285f4; }
+    .nav-prev { background: #34a853; }
+
+    .input-section {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #555;
+      font-size: 0.95em;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover {
+      background: #0d5bb8;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .action-buttons button {
+      flex: 1;
+      padding: 10px;
+      font-size: 1em;
+    }
+    .btn-save { background: #34a853; }
+    .btn-save:hover { background: #2d8f47; }
+    .btn-clear { background: #ea4335; }
+    .btn-clear:hover { background: #d33426; }
+
+    .results {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-top: 16px;
+      font-family: monospace;
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+    .section {
+      margin-bottom: 16px;
+    }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 1.2em;
+      color: #1a365d;
+    }
+    .value {
+      word-break: break-all;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border: 1px dashed #ddd;
+    }
+    .not-caught { color: #c5221f; background-color: #fce8e6; }
+    .error {
+      color: #d93025;
+      text-align: center;
+      font-weight: bold;
+      margin-top: 12px;
+      padding: 10px;
+      background: #fce8e6;
+      border-radius: 6px;
+      display: none;
+    }
+
+    /* Warna frekuensi hingga 28 */
+    .freq-1 { color: #107c10; background-color: #e6f4ea; }
+    .freq-2 { color: #8b5cf6; background-color: #f0e6ff; }
+    .freq-3 { color: #dc2626; background-color: #fee2e2; }
+    .freq-4 { color: #0891b2; background-color: #ecfeff; }
+    .freq-5 { color: #7c2d12; background-color: #ffefeb; }
+    .freq-6 { color: #5d1a9b; background-color: #f3e8ff; }
+    .freq-7 { color: #065f46; background-color: #d1fae5; }
+    .freq-8 { color: #842f00; background-color: #ffedd5; }
+    .freq-9 { color: #115e59; background-color: #ccfbf1; }
+    .freq-10 { color: #591c0f; background-color: #fde8e0; }
+    .freq-11 { color: #1e40af; background-color: #dbeafe; }
+    .freq-12 { color: #4d1f00; background-color: #fef3c7; }
+    .freq-13 { color: #08331c; background-color: #dcfce7; }
+    .freq-14 { color: #d946ef; background-color: #fae7ff; }
+    .freq-15 { color: #0f766e; background-color: #d4faf4; }
+    .freq-16 { color: #9d174d; background-color: #fbe9f1; }
+    .freq-17 { color: #65a30d; background-color: #ecf9d5; }
+    .freq-18 { color: #78350f; background-color: #fff0d7; }
+    .freq-19 { color: #4338ca; background-color: #e7e4fb; }
+    .freq-20 { color: #0891b2; background-color: #e0f9ff; }
+    .freq-21 { color: #c2410c; background-color: #ffe9dc; }
+    .freq-22 { color: #3f3f46; background-color: #f4f4f5; }
+    .freq-23 { color: #059669; background-color: #ccfbee; }
+    .freq-24 { color: #9333ea; background-color: #f0e6ff; }
+    .freq-25 { color: #713f12; background-color: #f9e8d0; }
+    .freq-26 { color: #3b82f6; background-color: #dbeafe; }
+    .freq-27 { color: #854d0e; background-color: #fef0c7; }
+    .freq-28 { color: #c026d3; background-color: #fae7ff; }
+
+    .copy-summary-btn {
+      background: #4caf50;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+    .copy-summary-btn:hover {
+      background: #388e3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔢 Generator Togel + Kamar Lemah (28 Kontrol)</h1>
+
+    <!-- 🔗 Navigasi Modular -->
+    <div class="nav-buttons">
+      <a href="degodego.html" class="nav-home">🏠 Home</a>
+      <a href="fitur1.html" class="nav-prev">◀ Fitur 1</a>
+    </div>
+
+    <div class="input-section">
+      <label for="currResult">4D Result Sekarang</label>
+      <input type="text" id="currResult" placeholder="Contoh: 7890" maxlength="4" />
+    </div>
+
+    <div class="input-section">
+      <label for="tanggalSebelum">Tanggal Pemutaran Sebelumnya</label>
+      <input type="text" id="tanggalSebelum" placeholder="Contoh: 10" inputmode="numeric" />
+    </div>
+
+    <div class="input-section">
+      <label for="tanggalSekarang">Tanggal Pemutaran Sekarang</label>
+      <input type="text" id="tanggalSekarang" placeholder="Contoh: 11" inputmode="numeric" />
+    </div>
+
+    <div class="input-section">
+      <label for="result4DLalu">4D Result Sebelumnya</label>
+      <input type="text" id="result4DLalu" placeholder="Contoh: 4796" inputmode="numeric" maxlength="4" />
+    </div>
+
+    <button id="generateBtn">Generate 2D + Kamar Lemah</button>
+    
+    <div class="action-buttons">
+      <button id="saveBtn" class="btn-save">💾 Simpan ke LocalStorage</button>
+      <button id="clearBtn" class="btn-clear">🗑️ Hapus & Bersihkan</button>
+    </div>
+    
+    <div id="error" class="error"></div>
+
+    <div class="results" id="resultsContainer"></div>
+  </div>
+
+  <script>
+    // ─── KONSTANTA & FUNGSI BANTUAN ─────────────────────────────────────
+    const SHIO_TO_2D = {
+      1: ["01","13","25","37","49","61","73","85","97"],
+      2: ["02","14","26","38","50","62","74","86","98"],
+      3: ["03","15","27","39","51","63","75","87","99"],
+      4: ["04","16","28","40","52","64","76","88","00"],
+      5: ["05","17","29","41","53","65","77","89"],
+      6: ["06","18","30","42","54","66","78","90"],
+      7: ["07","19","31","43","55","67","79","91"],
+      8: ["08","20","32","44","56","68","80","92"],
+      9: ["09","21","33","45","57","69","81","93"],
+      10: ["10","22","34","46","58","70","82","94"],
+      11: ["11","23","35","47","59","71","83","95"],
+      12: ["12","24","36","48","60","72","84","96"]
+    };
+    const TWIN_NUMBERS = ["00","11","22","33","44","55","66","77","88","99"];
+
+    function getIndex(angka) { return (angka + 5) % 10; }
+    function angkaKeShio(n) { n = n % 12; return n === 0 ? 12 : n; }
+    function digitalRoot(n) {
+      let s = n;
+      while (s >= 10) s = String(s).split('').reduce((a, b) => parseInt(a) + parseInt(b), 0);
+      return s;
+    }
+    function hitungDasar2D(duaD) {
+      let total = duaD < 10 ? duaD : parseInt(duaD.toString()[0]) + parseInt(duaD.toString()[1]);
+      while (total >= 10) total = String(total).split('').reduce((sum, d) => sum + parseInt(d), 0);
+      return total === 0 ? 9 : total;
+    }
+    function getInverseDigits(allowed) {
+      const all = ["0","1","2","3","4","5","6","7","8","9"];
+      return all.filter(d => !allowed.includes(d));
+    }
+    function generateAll2DFromDigits(digits) {
+      const unique = [...new Set(digits)];
+      const combos = [];
+      for (const a of unique) for (const b of unique) combos.push(a + b);
+      return new Set(combos);
+    }
+    function getAll2D() {
+      return Array.from({length: 100}, (_, i) => i.toString().padStart(2, '0'));
+    }
+
+    // ─── RUMUS SHIO LEMAH (1–14) ─────────────────────────────────────────
+    function getShioLemahSet(tglSeb, tglSkr, empatDLalu, empatDSkr) {
+      const rumusSets = Array(14).fill().map(() => new Set());
+      let str4D = empatDSkr.toString().padStart(4, '0');
+      const AS = +str4D[0], KOP = +str4D[1], KEPALA = +str4D[2], EKOR = +str4D[3], duaD = KEPALA * 10 + EKOR;
+      let str4DLalu = empatDLalu.toString().padStart(4, '0');
+      const AS_Lalu = +str4DLalu[0];
+
+      const shio1 = angkaKeShio(tglSkr);
+      for (const num of SHIO_TO_2D[shio1]) rumusSets[0].add(num);
+
+      const shio2 = angkaKeShio(tglSkr + 7);
+      for (const num of SHIO_TO_2D[shio2]) rumusSets[1].add(num);
+
+      const shio3 = angkaKeShio(tglSeb + tglSkr);
+      for (const num of SHIO_TO_2D[shio3]) rumusSets[2].add(num);
+
+      const shio4 = angkaKeShio(hitungDasar2D(duaD) + tglSkr);
+      for (const num of SHIO_TO_2D[shio4]) rumusSets[3].add(num);
+
+      const shio5 = angkaKeShio(100 - duaD);
+      for (const num of SHIO_TO_2D[shio5]) rumusSets[4].add(num);
+
+      const shio6 = angkaKeShio(99 - duaD);
+      for (const num of SHIO_TO_2D[shio6]) rumusSets[5].add(num);
+
+      const angka7 = getIndex(AS) * 10 + getIndex(KOP);
+      const shio7 = angkaKeShio(angka7);
+      for (const num of SHIO_TO_2D[shio7]) rumusSets[6].add(num);
+
+      const angka8 = getIndex(KEPALA) * 10 + getIndex(EKOR);
+      const shio8 = angkaKeShio(angka8);
+      for (const num of SHIO_TO_2D[shio8]) rumusSets[7].add(num);
+
+      const angka9 = AS * 10 + KOP;
+      const shio9 = angkaKeShio(angka9);
+      for (const num of SHIO_TO_2D[shio9]) rumusSets[8].add(num);
+
+      const angka10 = KOP * 10 + KEPALA;
+      const shio10 = angkaKeShio(angka10);
+      for (const num of SHIO_TO_2D[shio10]) rumusSets[9].add(num);
+
+      const digitKepala = KEPALA.toString();
+      for (let s = 1; s <= 12; s++) {
+        if (!SHIO_TO_2D[s].some(num => num.includes(digitKepala)))
+          SHIO_TO_2D[s].forEach(num => rumusSets[10].add(num));
+      }
+
+      const digitEkor = EKOR.toString();
+      for (let s = 1; s <= 12; s++) {
+        if (!SHIO_TO_2D[s].some(num => num.includes(digitEkor)))
+          SHIO_TO_2D[s].forEach(num => rumusSets[11].add(num));
+      }
+
+      const angka13 = AS * 10 + EKOR;
+      const shio13 = angkaKeShio(angka13);
+      for (const num of SHIO_TO_2D[shio13]) rumusSets[12].add(num);
+
+      const idxLalu = getIndex(AS_Lalu);
+      const idxSkr = getIndex(AS);
+      const angka14 = idxLalu * 10 + idxSkr;
+      const shio14 = angkaKeShio(angka14);
+      for (const num of SHIO_TO_2D[shio14]) rumusSets[13].add(num);
+
+      return rumusSets;
+    }
+
+    // ─── KONTROL B–N & O ─────────────────────────────────────────────────
+    const KONTROL_B = {1:["1","2","6","7","8","9"],2:["0","2","3","7","8","9"],3:["0","1","3","4","8","9"],4:["0","1","2","4","5","9"],5:["0","1","2","3","5","6"],6:["1","2","3","4","6","7"],7:["2","3","4","5","7","8"],8:["3","4","5","6","8","9"],9:["0","4","5","6","7","9"],0:["1","2","3","4","5","6"]};
+    const KONTROL_C = {0:["3","4","5","6","8","9"],1:["0","2","3","4","6","9"],2:["1","2","3","5","6","8"],3:["0","1","2","3","4","9"],4:["1","2","3","6","8","9"],5:["0","1","2","3","4","5","9"],6:["0","2","3","5","6","9"],7:["0","1","2","3","8","9"],8:["2","3","4","6","7","9"],9:["1","2","3","4","5","6"]};
+    const KONTROL_D = KONTROL_B;
+    const KONTROL_G = {0:["0","1","2","7","8","9"],1:["0","1","2","3","8","9"],2:["0","1","2","3","4","9"],3:["0","1","2","3","4","5"],4:["1","2","3","4","5","6"],5:["2","3","4","5","6","7"],6:["3","4","5","6","7","8"],7:["4","5","6","7","8","9"],8:["5","6","7","8","9","0"],9:["6","7","8","9","0","1"]};
+    const KONTROL_H = {0:["0","1","2","5","6","7"],1:["1","2","3","6","7","8"],2:["2","3","4","7","8","9"],3:["0","3","4","5","8","9"],4:["0","2","4","5","6","9"],5:["0","1","2","5","6","7"],6:["1","2","3","6","7","8"],7:["2","3","4","7","8","9"],8:["0","3","4","5","8","9"],9:["0","1","4","5","6","9"]};
+    const KONTROL_I = {0:["0","2","3","5","6","7"],1:["0","3","4","6","7","9"],2:["0","1","5","6","7","8"],3:["2","5","6","7","8","9"],4:["0","2","3","5","6","7"],5:["0","1","4","7","8","9"],6:["0","1","2","7","8","9"],7:["0","1","2","3","6","9"],8:["0","1","2","3","4","5"],9:["0","3","4","5","7","8"]};
+    const KONTROL_J = {0:["4","5","6","7","8","9"],1:["5","6","7","8","9","0"],2:["6","7","8","9","0","1"],3:["7","8","9","0","1","2"],4:["8","9","0","1","2","3"],5:["9","0","1","2","3","4"],6:["0","1","2","3","4","5"],7:["1","2","3","4","5","6"],8:["2","3","4","5","6","7"],9:["3","4","5","6","7","8"]};
+    const KONTROL_K = {0:["0","3","4","5","6","9"],1:["0","1","4","5","6","7"],2:["1","2","5","6","7","8"],3:["2","3","6","7","8","9"],4:["0","3","4","7","8","9"],5:["0","1","4","5","8","9"],6:["0","1","2","5","6","9"],7:["0","1","2","3","6","7"],8:["1","2","3","4","7","8"],9:["2","3","4","5","8","9"]};
+    const KONTROL_R = {0:["5","6","7","8","9","0"],1:["1","2","3","4","5","6"],2:["7","8","9","0","1","2"],3:["3","4","5","6","7","8"],4:["9","0","1","2","3","4"],5:["5","6","7","8","9","0"],6:["1","2","3","4","5","6"],7:["7","8","9","0","1","2"],8:["3","4","5","6","7","8"],9:["9","0","1","2","3","4"]};
+    const KONTROL_Y = {0:["8","9","0","1","2","3"],1:["9","0","1","2","3","4"],2:["0","1","2","3","4","5"],3:["1","2","3","4","5","6"],4:["2","3","4","5","6","7"],5:["3","4","5","6","7","8"],6:["4","5","6","7","8","9"],7:["5","6","7","8","9","0"],8:["6","7","8","9","0","1"],9:["7","8","9","0","1","2"]};
+    const KONTROL_A = {1:["0","1","3","6","7"],2:["1","2","3","7","8"],3:["2","3","4","8","9"],4:["0","3","4","5","9"],5:["0","1","4","5","6"],6:["1","2","5","6","7"],7:["2","3","6","7","8"],8:["3","4","7","8","9"],9:["0","4","5","8","9"]};
+    const KONTROL_M = {0:["9","0","1","2","3"],1:["8","9","0","1","2"],2:["3","4","5","6","7"],3:["3","4","5","6","7"],4:["5","6","7","8","9"],5:["0","1","2","3","4"],6:["7","8","9","0","1"],7:["2","3","4","5","6"],8:["1","2","3","4","5"],9:["4","5","6","7","8"]};
+    const KONTROL_N = {0:["1","4","6","9"],1:["0","2","5","7"],2:["1","3","6","8"],3:["2","4","7","9"],4:["0","3","5","8"],5:["6","4","1","9"],6:["7","5","0","2"],7:["8","6","3","1"],8:["9","7","4","2"],9:["0","8","5","3"]};
+
+    function rumusSinCosSliding(result4d) {
+      const AB = parseInt(result4d.substring(0, 2), 10);
+      const CD = parseInt(result4d.substring(2, 4), 10);
+      const degToRad = deg => deg * (Math.PI / 180);
+      const value = AB * Math.sin(degToRad(CD));
+      const decimalPart = value.toString().split('.')[1] || '0';
+      const digits = (decimalPart + '000000').substring(0, 6);
+      const pairs = [];
+      for (let i = 0; i < 5; i++) {
+        if (i + 1 < digits.length) pairs.push(digits[i] + digits[i + 1]);
+        else pairs.push('00');
+      }
+      return pairs;
+    }
+
+    const get2DSetFromB = (curr) => {
+      const as = +curr[0], ekor = +curr[3], dasar = digitalRoot(as + ekor);
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_B[dasar] || []));
+    };
+    const get2DSetFromC = (curr) => {
+      const kepala = curr[2];
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_C[kepala] || []));
+    };
+    const get2DSetFromD = (curr) => {
+      const kop = +curr[1], kepala = +curr[2], dasar = digitalRoot(kop + kepala);
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_D[dasar] || []));
+    };
+    const get2DSetFromG = (curr) => {
+      const kop = +curr[1], kepala = +curr[2], dasar = (kop + kepala) % 10;
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_G[dasar] || []));
+    };
+    const get2DSetFromH = (curr) => {
+      const kepala = curr[2];
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_H[kepala] || []));
+    };
+    const get2DSetFromI = (curr) => {
+      const ekor = curr[3];
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_I[ekor] || []));
+    };
+    const get2DSetFromJ = (curr) => {
+      const as = +curr[0], ekor = +curr[3], dasar = (as + ekor) % 10;
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_J[dasar] || []));
+    };
+    const get2DSetFromK = (curr) => {
+      const kepala = +curr[2], ekor = +curr[3], dasar = (kepala + ekor) % 10;
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_K[dasar] || []));
+    };
+    const get2DSetFromR = (curr) => {
+      const ekor = curr[3];
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_R[ekor] || []));
+    };
+    const get2DSetFromY = (curr) => {
+      const kop = +curr[1], ekor = +curr[3], dasar = (kop + ekor) % 10;
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_Y[dasar] || []));
+    };
+    const get2DSetFromA = (curr) => {
+      const kepala = +curr[2], ekor = +curr[3], dasar = digitalRoot(kepala + ekor);
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_A[dasar] || []));
+    };
+    const get2DSetFromM = (curr) => {
+      const ekor = curr[3];
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_M[ekor] || []));
+    };
+    const get2DSetFromN = (curr) => {
+      const kepala = +curr[2], ekor = +curr[3], selisih = Math.abs(kepala - ekor);
+      return generateAll2DFromDigits(getInverseDigits(KONTROL_N[selisih] || []));
+    };
+    const get2DSetFromO = (curr) => new Set(rumusSinCosSliding(curr));
+
+    // ─── HITUNG SEMUA ────────────────────────────────────────────────────
+    function calculateAll(currResult, tglSeb, tglSkr, resultLalu) {
+      const setB = get2DSetFromB(currResult);
+      const setC = get2DSetFromC(currResult);
+      const setD = get2DSetFromD(currResult);
+      const setG = get2DSetFromG(currResult);
+      const setH = get2DSetFromH(currResult);
+      const setI = get2DSetFromI(currResult);
+      const setJ = get2DSetFromJ(currResult);
+      const setK = get2DSetFromK(currResult);
+      const setR = get2DSetFromR(currResult);
+      const setY = get2DSetFromY(currResult);
+      const setA = get2DSetFromA(currResult);
+      const setM = get2DSetFromM(currResult);
+      const setN = get2DSetFromN(currResult);
+      const setO = get2DSetFromO(currResult);
+      const shioSets = getShioLemahSet(tglSeb, tglSkr, resultLalu, +currResult);
+
+      const all2d = getAll2D();
+      const freqMap = {};
+      const notCaught = [];
+
+      for (const twoDigit of all2d) {
+        let count = 0;
+        if (setB.has(twoDigit)) count++;
+        if (setC.has(twoDigit)) count++;
+        if (setD.has(twoDigit)) count++;
+        if (setG.has(twoDigit)) count++;
+        if (setH.has(twoDigit)) count++;
+        if (setI.has(twoDigit)) count++;
+        if (setJ.has(twoDigit)) count++;
+        if (setK.has(twoDigit)) count++;
+        if (setR.has(twoDigit)) count++;
+        if (setY.has(twoDigit)) count++;
+        if (setA.has(twoDigit)) count++;
+        if (setM.has(twoDigit)) count++;
+        if (setN.has(twoDigit)) count++;
+        if (setO.has(twoDigit)) count++;
+        for (let i = 0; i < 14; i++) if (shioSets[i].has(twoDigit)) count++;
+
+        if (count > 0) {
+          if (!freqMap[count]) freqMap[count] = [];
+          freqMap[count].push(twoDigit);
+        } else {
+          notCaught.push(twoDigit);
+        }
+      }
+
+      return { freqMap, notCaught };
+    }
+
+    // ─── FUNGSI SALIN ────────────────────────────────────────────────────
+    function copyToClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok ? Promise.resolve() : Promise.reject();
+      }
+    }
+
+    // ─── TAMPILKAN HASIL ─────────────────────────────────────────────────
+    function displayResults(freqMap, notCaught) {
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = '';
+
+      // ❌ Tidak Terjaring
+      const notCaughtSection = document.createElement('div');
+      notCaughtSection.className = 'section';
+      notCaughtSection.innerHTML = `
+        <h2>❌ 2D Tidak Terjaring (${notCaught.length})</h2>
+        <div class="value not-caught">${notCaught.length ? notCaught.join('*') : '--'}</div>
+      `;
+      container.appendChild(notCaughtSection);
+
+      // 🎯 Terjaring 1x–28x
+      if (Object.keys(freqMap).length === 0) {
+        container.innerHTML += '<div class="section"><h2>🎯 Tidak ada 2D yang terjaring</h2></div>';
+      } else {
+        const sortedFreq = Object.keys(freqMap).map(Number).sort((a, b) => a - b);
+        for (const freq of sortedFreq) {
+          const list = freqMap[freq].sort();
+          const count = list.length;
+          let className = `freq-${freq}`;
+          if (freq > 28) className = 'freq-28';
+          const section = document.createElement('div');
+          section.className = 'section';
+          section.innerHTML = `
+            <h2>🎯 Terjaring ${freq}x (${count})</h2>
+            <div class="value ${className}">${list.join('*')}</div>
+          `;
+          container.appendChild(section);
+        }
+      }
+
+      // 📌 RANGKUMAN FINAL
+      const summaryBase = [
+        ...notCaught,
+        ...(freqMap[1] || []),
+        ...(freqMap[2] || []),
+        ...(freqMap[3] || []),
+        ...(freqMap[4] || [])
+      ];
+      const summarySet = new Set(summaryBase);
+      TWIN_NUMBERS.forEach(twin => summarySet.add(twin)); // ✅ Semua twin dipaksa masuk
+      const summaryList = Array.from(summarySet).sort();
+      const summaryText = summaryList.join('*') + '#';
+
+      const summarySection = document.createElement('div');
+      summarySection.className = 'section';
+      summarySection.innerHTML = `
+        <h2>📌 Rangkuman Final (Tidak Terjaring + 1x–4x + Semua Twin) (${summaryList.length})</h2>
+        <div class="value" style="background:#fff8e1; color:#5d4037; border:1px solid #ffecb3;">
+          ${summaryText}
+        </div>
+        <button id="copyFinalBtn" class="copy-summary-btn">📋 Salin Rangkuman Final</button>
+      `;
+      container.appendChild(summarySection);
+
+      // Salin Rangkuman Final
+      document.getElementById('copyFinalBtn').onclick = () => {
+        copyToClipboard(summaryText).then(() => {
+          const notice = document.createElement('div');
+          notice.textContent = '✅ Rangkuman tersalin!';
+          notice.style.cssText = `
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #4caf50; color: white; padding: 10px 20px; border-radius: 6px;
+            font-weight: bold; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          `;
+          document.body.appendChild(notice);
+          setTimeout(() => document.body.removeChild(notice), 2000);
+        }).catch(() => alert('Gagal menyalin. Silakan salin manual.'));
+      };
+    }
+
+    // ─── LOCALSTORAGE ────────────────────────────────────────────────────
+    const STORAGE_KEY = 'fitur2_data';
+
+    function saveToStorage() {
+      const data = {
+        currResult: document.getElementById('currResult').value.trim(),
+        tanggalSebelum: document.getElementById('tanggalSebelum').value.trim(),
+        tanggalSekarang: document.getElementById('tanggalSekarang').value.trim(),
+        result4DLalu: document.getElementById('result4DLalu').value.trim(),
+        resultsHTML: document.getElementById('resultsContainer').innerHTML
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadFromStorage() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          document.getElementById('currResult').value = data.currResult || '';
+          document.getElementById('tanggalSebelum').value = data.tanggalSebelum || '';
+          document.getElementById('tanggalSekarang').value = data.tanggalSekarang || '';
+          document.getElementById('result4DLalu').value = data.result4DLalu || '';
+          if (data.resultsHTML) {
+            document.getElementById('resultsContainer').innerHTML = data.resultsHTML;
+            // Re-attach copy listener
+            const copyBtn = document.getElementById('copyFinalBtn');
+            if (copyBtn) {
+              copyBtn.onclick = () => {
+                const summaryDiv = copyBtn.previousElementSibling;
+                const text = summaryDiv.textContent.trim();
+                copyToClipboard(text).then(() => {
+                  const notice = document.createElement('div');
+                  notice.textContent = '✅ Rangkuman tersalin!';
+                  notice.style.cssText = `
+                    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+                    background: #4caf50; color: white; padding: 10px 20px; border-radius: 6px;
+                    font-weight: bold; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                  `;
+                  document.body.appendChild(notice);
+                  setTimeout(() => document.body.removeChild(notice), 2000);
+                }).catch(() => alert('Gagal menyalin.'));
+              };
+            }
+          }
+        } catch (e) {
+          console.error('Gagal memuat data:', e);
+        }
+      }
+    }
+
+    function clearStorage() {
+      localStorage.removeItem(STORAGE_KEY);
+      document.getElementById('currResult').value = '';
+      document.getElementById('tanggalSebelum').value = '';
+      document.getElementById('tanggalSekarang').value = '';
+      document.getElementById('result4DLalu').value = '';
+      document.getElementById('resultsContainer').innerHTML = '';
+      document.getElementById('error').style.display = 'none';
+    }
+
+    // ─── EVENT HANDLERS ──────────────────────────────────────────────────
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const curr = document.getElementById('currResult').value.trim();
+      const tglSeb = document.getElementById('tanggalSebelum').value.trim();
+      const tglSkr = document.getElementById('tanggalSekarang').value.trim();
+      const lalu = document.getElementById('result4DLalu').value.trim();
+      if (curr && tglSeb && tglSkr && lalu) {
+        saveToStorage();
+        alert('✅ Data berhasil disimpan ke localStorage!');
+      } else {
+        alert('⚠️ Lengkapi semua input terlebih dahulu.');
+      }
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (confirm('Yakin hapus semua data dan hasil?')) {
+        clearStorage();
+        alert('🗑️ Semua data telah dihapus.');
+      }
+    });
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const currResult = document.getElementById('currResult').value.trim();
+      const tglSeb = document.getElementById('tanggalSebelum').value.trim();
+      const tglSkr = document.getElementById('tanggalSekarang').value.trim();
+      const resultLalu = document.getElementById('result4DLalu').value.trim();
+
+      const errorEl = document.getElementById('error');
+      errorEl.style.display = 'none';
+
+      if (!/^\d{4}$/.test(currResult)) {
+        errorEl.textContent = '⚠️ 4D Sekarang harus 4 digit';
+        errorEl.style.display = 'block';
+        return;
+      }
+      if (!/^\d+$/.test(tglSeb) || !/^\d+$/.test(tglSkr)) {
+        errorEl.textContent = '⚠️ Tanggal harus angka';
+        errorEl.style.display = 'block';
+        return;
+      }
+      if (!/^\d{4}$/.test(resultLalu)) {
+        errorEl.textContent = '⚠️ 4D Lalu harus 4 digit';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const tglSebNum = parseInt(tglSeb, 10);
+      const tglSkrNum = parseInt(tglSkr, 10);
+      const resultLaluNum = parseInt(resultLalu, 10);
+
+      if (tglSebNum < 1 || tglSebNum > 31 || tglSkrNum < 1 || tglSkrNum > 31) {
+        errorEl.textContent = '⚠️ Tanggal harus antara 1–31';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const { freqMap, notCaught } = calculateAll(currResult, tglSebNum, tglSkrNum, resultLaluNum);
+        displayResults(freqMap, notCaught);
+        saveToStorage(); // Simpan otomatis setelah generate
+      } catch (e) {
+        errorEl.textContent = 'Terjadi kesalahan saat memproses.';
+        errorEl.style.display = 'block';
+        console.error(e);
+      }
+    });
+
+    document.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('generateBtn').click();
+    });
+
+    // ─── MUAT SAAT HALAMAN DIBUKA ────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', loadFromStorage);
+  </script>
+</body>
+</html>
