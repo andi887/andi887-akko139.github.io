@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>saringan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      background: #f0f8ff;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.4em;
+    }
+
+    /* 🔙 Kembali ke Beranda */
+    .back-home {
+      text-align: center;
+      margin: 12px 0;
+    }
+    .back-home a {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #4285f4;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.95em;
+    }
+    .back-home a:hover {
+      background: #3367d6;
+    }
+
+    .form-group {
+      margin: 12px 0;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .btn-group button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #generateBtn {
+      background: #4CAF50;
+    }
+    #generateBtn:hover {
+      background: #45a049;
+    }
+    #saveBtn {
+      background: #2196F3;
+    }
+    #saveBtn:hover {
+      background: #0b7dda;
+    }
+    #clearBtn {
+      background: #f44336;
+      color: white;
+    }
+    #clearBtn:hover {
+      background: #d32f2f;
+    }
+    .status {
+      text-align: center;
+      font-size: 14px;
+      color: #e74c3c;
+      min-height: 20px;
+      margin-top: -10px;
+    }
+    .result-box {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+      position: relative;
+    }
+    .result {
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .copy-btn {
+      background: #9C27B0;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .copy-btn:hover {
+      background: #7B1FA2;
+    }
+    .section {
+      margin-top: 15px;
+    }
+    .title {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔢 saringan</h1>
+
+  <!-- 🔙 Kembali ke Beranda -->
+  <div class="back-home">
+    <a href="index.html">🔙 Kembali ke Beranda</a>
+  </div>
+
+  <div class="form-group">
+    <label>A. Angka Kontrol (pisah versi dengan /)</label>
+    <input type="text" id="angkaKontrol" placeholder="Contoh: 0123456 atau 1234/789/1780">
+  </div>
+
+  <div class="form-group">
+    <label>B. Ekor Lemah (pisah dengan / jika >1)</label>
+    <input type="text" id="ekorLemah" placeholder="Contoh: 6 atau 6/7">
+  </div>
+
+  <div class="form-group">
+    <label>C. Kepala Lemah (pisah dengan / jika >1)</label>
+    <input type="text" id="kepalaLemah" placeholder="Contoh: 5 atau 2/5">
+  </div>
+
+  <div class="form-group">
+    <label>D. Jarak Lemah</label>
+    <input type="text" id="jarakLemah" placeholder="Contoh: 26-58">
+  </div>
+
+  <div class="form-group">
+    <label>E. Shio Lemah (pisah dengan / jika >1)</label>
+    <input type="text" id="shioLemah" placeholder="Contoh: 8 atau 8/9">
+  </div>
+
+  <div class="btn-group">
+    <button id="generateBtn" onclick="generate()">Generate</button>
+    <button id="saveBtn" onclick="saveToFirebase()">Simpan</button>
+    <button id="clearBtn" onclick="clearAll()">Hapus</button>
+  </div>
+  <div class="status" id="status"></div>
+
+  <div id="output"></div>
+
+  <!-- Firebase SDK (Modular) -->
+  <script type="module">
+    // ================== FIREBASE SETUP ==================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
+      authDomain: "nomoromosse.firebaseapp.com",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nomoromosse",
+      storageBucket: "nomoromosse.firebasestorage.app",
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const inputRef = ref(db, 'generator_2d/inputs');
+
+    // ================== HELPER FUNCTIONS ==================
+    function showMessage(text, isError = false) {
+      const el = document.getElementById('status');
+      el.textContent = text;
+      el.style.color = isError ? '#e74c3c' : '#27ae60';
+      setTimeout(() => {
+        if (el.textContent === text) el.textContent = '';
+      }, 3000);
+    }
+
+    function getTwinNumbers() {
+      const twins = [];
+      for (let i = 0; i <= 9; i++) {
+        twins.push(i.toString().repeat(2));
+      }
+      return new Set(twins);
+    }
+
+    function getShioNumbers(shio) {
+      const nums = [];
+      const base = shio === 12 ? 0 : shio;
+      for (let i = 0; i < 9; i++) {
+        let num = base + i * 12;
+        if (num > 99) break;
+        nums.push(num.toString().padStart(2, '0'));
+      }
+      return nums;
+    }
+
+    function parseRange(rangeStr) {
+      const clean = rangeStr.trim();
+      if (!clean.includes('-')) return [];
+      const [start, end] = clean.split('-').map(Number);
+      if (isNaN(start) || isNaN(end)) return [];
+      const result = [];
+      for (let i = Math.max(0, start); i <= Math.min(99, end); i++) {
+        result.push(i.toString().padStart(2, '0'));
+      }
+      return result;
+    }
+
+    function copyToClipboard(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error("Copy gagal:", err);
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function parseShioParts(input) {
+      if (!input.trim()) return [];
+      return input
+        .split('/')
+        .map(s => s.trim().replace(/\D/g, ''))
+        .filter(s => s !== '')
+        .map(s => parseInt(s, 10))
+        .filter(n => !isNaN(n) && n >= 1 && n <= 12);
+    }
+
+    function parseDigitParts(input) {
+      if (!input.trim()) return [];
+      return input
+        .split('/')
+        .map(s => s.trim().replace(/\D/g, ''))
+        .filter(s => s !== '')
+        .join('')
+        .split('')
+        .filter(d => d >= '0' && d <= '9');
+    }
+
+    // ================== EXPOSED GLOBAL FUNCTIONS ==================
+    window.generate = function() {
+      const A_input = document.getElementById('angkaKontrol').value;
+      const B_input = document.getElementById('ekorLemah').value;
+      const C_input = document.getElementById('kepalaLemah').value;
+      const D_input = document.getElementById('jarakLemah').value;
+      const E_input = document.getElementById('shioLemah').value;
+
+      const twinSet = getTwinNumbers();
+
+      const ekorList = parseDigitParts(B_input);
+      const ekorLemahSet = new Set();
+      ekorList.forEach(d => {
+        for (let i = 0; i <= 9; i++) {
+          ekorLemahSet.add(i + '' + d);
+        }
+      });
+
+      const kepalaList = parseDigitParts(C_input);
+      const kepalaLemahSet = new Set();
+      kepalaList.forEach(d => {
+        for (let i = 0; i <= 9; i++) {
+          kepalaLemahSet.add(d + '' + i);
+        }
+      });
+
+      const jarakLemahSet = new Set(parseRange(D_input));
+
+      const shioList = parseShioParts(E_input);
+      const shioLemahSet = new Set();
+      shioList.forEach(shio => {
+        getShioNumbers(shio).forEach(num => shioLemahSet.add(num));
+      });
+
+      let versions = [];
+      if (A_input.trim()) {
+        versions = A_input
+          .split('/')
+          .map(v => v.trim().replace(/\D/g, ''))
+          .filter(v => v.length > 0);
+      }
+      const versionDigitSets = versions.map(ver => new Set(ver.split('')));
+
+      const hitCount = {};
+      for (let i = 0; i < 100; i++) {
+        const num = i.toString().padStart(2, '0');
+        let count = 0;
+
+        if (ekorLemahSet.has(num)) count++;
+        if (kepalaLemahSet.has(num)) count++;
+        if (jarakLemahSet.has(num)) count++;
+        if (shioLemahSet.has(num)) count++;
+
+        for (const digitSet of versionDigitSets) {
+          if (!digitSet.has(num[0]) && !digitSet.has(num[1])) {
+            count++;
+          }
+        }
+
+        hitCount[num] = count;
+      }
+
+      const angkaBersih = [];
+      const angkaKhusus = [];
+      const outGroups = {};
+      const allNumbers = Array.from({length: 100}, (_, i) => i.toString().padStart(2, '0'));
+
+      for (const num of allNumbers) {
+        const count = hitCount[num];
+        if (twinSet.has(num)) {
+          angkaKhusus.push(num);
+        } else {
+          if (count === 0) {
+            angkaBersih.push(num);
+          } else {
+            if (!outGroups[count]) outGroups[count] = [];
+            outGroups[count].push(num);
+          }
+        }
+      }
+
+      let html = '';
+
+      angkaBersih.sort();
+      const bersihText = angkaBersih.length ? angkaBersih.join('*') : '-';
+      html += `<div class="section">
+        <div class="title">✅ Angka Bersih (${angkaBersih.length} lines)</div>
+        <div class="result-box">
+          <div class="result">${bersihText}#</div>
+          <button class="copy-btn" data-copy="${bersihText}#">Salin</button>
+        </div>
+      </div>`;
+
+      angkaKhusus.sort();
+      const khususText = angkaKhusus.length ? angkaKhusus.join('*') : '-';
+      html += `<div class="section">
+        <div class="title">🌟 Angka Khusus (${angkaKhusus.length} lines)</div>
+        <div class="result-box">
+          <div class="result">${khususText}#</div>
+          <button class="copy-btn" data-copy="${khususText}#">Salin</button>
+        </div>
+      </div>`;
+
+      const maxHit = Math.max(...Object.keys(outGroups).map(Number), 0);
+      for (let hit = 1; hit <= maxHit; hit++) {
+        const list = outGroups[hit] || [];
+        if (list.length === 0) continue;
+        list.sort();
+        const text = list.join('*') + '#';
+        html += `<div class="section">
+          <div class="title">⚠️ Out ${hit}x (${list.length} lines)</div>
+          <div class="result-box">
+            <div class="result">${text}</div>
+            <button class="copy-btn" data-copy="${text}">Salin</button>
+          </div>
+        </div>`;
+      }
+
+      document.getElementById('output').innerHTML = html;
+
+      // Re-attach copy listeners
+      document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.onclick = () => {
+          const text = btn.getAttribute('data-copy');
+          copyToClipboard(text);
+        };
+      });
+    };
+
+    window.saveToFirebase = async function() {
+      const data = {
+        A: document.getElementById('angkaKontrol').value,
+        B: document.getElementById('ekorLemah').value,
+        C: document.getElementById('kepalaLemah').value,
+        D: document.getElementById('jarakLemah').value,
+        E: document.getElementById('shioLemah').value,
+        timestamp: Date.now()
+      };
+
+      try {
+        showMessage("Menyimpan...");
+        await set(inputRef, data);
+        showMessage("✅ Data berhasil disimpan ke cloud!", false);
+      } catch (error) {
+        console.error("Gagal simpan:", error);
+        showMessage("❌ Gagal menyimpan ke cloud", true);
+      }
+    };
+
+    window.clearAll = async function() {
+      document.getElementById('angkaKontrol').value = '';
+      document.getElementById('ekorLemah').value = '';
+      document.getElementById('kepalaLemah').value = '';
+      document.getElementById('jarakLemah').value = '';
+      document.getElementById('shioLemah').value = '';
+      document.getElementById('output').innerHTML = '';
+      
+      try {
+        await remove(inputRef);
+        showMessage("✅ Data di cloud dihapus", false);
+      } catch (error) {
+        console.error("Gagal hapus:", error);
+        showMessage("ℹ️ Input lokal dihapus", false);
+      }
+    };
+
+    // ================== AUTO-LOAD FROM FIREBASE ==================
+    function loadFromFirebase() {
+      onValue(inputRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          document.getElementById('angkaKontrol').value = data.A || '';
+          document.getElementById('ekorLemah').value = data.B || '';
+          document.getElementById('kepalaLemah').value = data.C || '';
+          document.getElementById('jarakLemah').value = data.D || '';
+          document.getElementById('shioLemah').value = data.E || '';
+        }
+      }, (error) => {
+        console.warn("Gagal muat dari Firebase:", error);
+      });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadFromFirebase();
+    });
+  </script>
+</body>
+</html>
