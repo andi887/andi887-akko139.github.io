@@ -270,6 +270,34 @@
       kamarRumus[angkaKeShio(AS * 10 + EKOR)].add(13);
       kamarRumus[angkaKeShio(getIndex(AS_Lalu) * 10 + getIndex(AS))].add(14);
 
+      // 🔹 === TAMBAHAN: Rumus 15, 16, 17 (berdasarkan 6 digit) ===
+      // Bangun 6 digit dari gabungan 4D lalu + 4D sekarang → ambil 6 digit terakhir
+      let str4DLalu6 = empatDLalu.toString().padStart(4, '0');
+      let str4DSkr6 = empatDSkr.toString().padStart(4, '0');
+      const combined8 = str4DLalu6 + str4DSkr6; // contoh: "47967890"
+      const result6 = combined8.slice(-6).padStart(6, '0'); // "967890"
+
+      // Rumus 15: Jumlah semua digit + 9 → ambil 2 digit terakhir → cari kamar
+      let sum15 = 0;
+      for (const char of result6) sum15 += parseInt(char, 10);
+      sum15 += 9;
+      const target2D_15 = String(sum15).padStart(2, '0').slice(-2);
+      const angka15 = parseInt(target2D_15, 10);
+      kamarRumus[angkaKeShio(angka15)].add(15);
+
+      // Rumus 16: Digit ke-1 (A) dan ke-3 (C) dari result6 → bentuk 2D → kamar
+      const ac2D = result6[0] + result6[2]; // string, misal: "97"
+      const angka16 = parseInt(ac2D, 10);
+      kamarRumus[angkaKeShio(angka16)].add(16);
+
+      // Rumus 17: Jumlah semua digit mod 12
+      let sum17 = 0;
+      for (const char of result6) sum17 += parseInt(char, 10);
+      const mod17 = sum17 % 12;
+      const shio17 = mod17 === 0 ? 12 : mod17;
+      kamarRumus[shio17].add(17);
+      // 🔹 === AKHIR TAMBAHAN ===
+
       return kamarRumus;
     }
 
