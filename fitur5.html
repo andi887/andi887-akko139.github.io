@@ -64,6 +64,7 @@
       font-weight: bold;
       color: #2c3e50;
       margin-bottom: 6px;
+      overflow: hidden; /* untuk tombol salin float:right */
     }
     .status {
       text-align: center;
@@ -83,6 +84,21 @@
       font-weight: bold;
       margin: 8px 0 4px;
     }
+
+    /* Gaya tombol salin */
+    .copy-btn {
+      float: right;
+      padding: 4px 8px;
+      font-size: 0.85em;
+      background: #e0e0e0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #333;
+    }
+    .copy-btn:hover {
+      background: #d0d0d0;
+    }
   </style>
 </head>
 <body>
@@ -101,28 +117,28 @@
     <div class="source-title">📊 Sumber Data</div>
     
     <div class="section">
-      <div class="title">🔹 Fitur 2 (rampa40)</div>
+      <div class="title">🔹 Fitur 2 (rampa40) <button class="copy-btn" data-target="preview-r">📋 Salin</button></div>
       <div class="result-box" id="preview-r">-</div>
     </div>
 
     <div class="section">
-      <div class="title">🔹 Fitur 3 (saringan)</div>
+      <div class="title">🔹 Fitur 3 (saringan) <button class="copy-btn" data-target="preview-s">📋 Salin</button></div>
       <div class="result-box" id="preview-s">-</div>
     </div>
 
     <div class="section">
-      <div class="title">🔹 Fitur 4 (kamar)</div>
+      <div class="title">🔹 Fitur 4 (kamar) <button class="copy-btn" data-target="preview-k">📋 Salin</button></div>
       <div class="result-box" id="preview-k">-</div>
     </div>
   </div>
 
   <!-- Hasil akhir -->
   <div class="section">
-    <div class="title">📌 Rangkuman NGAI (≥2 Sumber)</div>
+    <div class="title">📌 Rangkuman NGAI (3-sumber + twin khusus) <button class="copy-btn" data-target="ngai-result">📋 Salin</button></div>
     <div class="result-box" id="ngai-result">Klik "OK" setelah data dimuat.</div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK (tanpa spasi trailing!) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -158,7 +174,6 @@
 
     const ALL_2D = Array.from({length:100}, (_,i) => i.toString().padStart(2,'0'));
 
-    // Simpan data sementara
     let cachedR = null;
     let cachedS = null;
     let cachedK = null;
@@ -167,11 +182,43 @@
       document.getElementById('status').textContent = msg;
     }
 
+    // Fungsi salin ke clipboard
+    async function copyToClipboard(text, feedbackId = 'status') {
+      if (!text || text === '-' || text.startsWith('❌') || text.includes('Klik "OK"')) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        showMessage("✅ Tersalin: " + (text.length > 30 ? text.substring(0,30) + "..." : text));
+      } catch (err) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          showMessage("✅ Tersalin (fallback)");
+        } catch (ex) {
+          showMessage("❌ Gagal menyalin");
+        }
+        document.body.removeChild(textArea);
+      }
+    }
+
+    // Event listener global untuk tombol salin
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('copy-btn')) {
+        const targetId = e.target.getAttribute('data-target');
+        const elem = document.getElementById(targetId);
+        if (elem) {
+          copyToClipboard(elem.textContent.trim());
+        }
+      }
+    });
+
+    // Fungsi parsing
     function parseDigitParts(input) {
       if (!input?.trim()) return [];
       return input.split('/').map(s => s.trim().replace(/\D/g, '')).filter(Boolean).join('').split('').filter(d => d >= '0' && d <= '9');
     }
-
     function parseRange(rangeStr) {
       const clean = rangeStr?.trim() || '';
       if (!clean.includes('-')) return [];
@@ -183,24 +230,24 @@
       }
       return res;
     }
-
     function parseShioParts(input) {
       if (!input?.trim()) return [];
       return input.split('/').map(s => parseInt(s.trim().replace(/\D/g, ''), 10)).filter(n => !isNaN(n) && n >= 1 && n <= 12);
     }
-
     function getShioNumbers(shio) { return SHIO_TO_2D[shio] || []; }
 
     function getHimpunanS(firebaseData) {
       if (!firebaseData) return new Set();
-      const A = firebaseData.A || '', B = firebaseData.B || '', C = firebaseData.C || '', D = firebaseData.D || '', E = firebaseData.E || '';
+      const { A = '', B = '', C = '', D = '', E = '' } = firebaseData;
       const ekorLemahSet = new Set(); parseDigitParts(B).forEach(d => { for (let i = 0; i <= 9; i++) ekorLemahSet.add(i + '' + d); });
       const kepalaLemahSet = new Set(); parseDigitParts(C).forEach(d => { for (let i = 0; i <= 9; i++) kepalaLemahSet.add(d + '' + i); });
       const jarakLemahSet = new Set(parseRange(D));
       const shioLemahSet = new Set(); parseShioParts(E).forEach(s => getShioNumbers(s).forEach(n => shioLemahSet.add(n)));
       let versions = A.trim() ? A.split('/').map(v => v.trim().replace(/\D/g, '')).filter(v => v) : [];
       const versionSets = versions.map(v => new Set(v.split('')));
-      const hitCount = {}; for (const num of ALL_2D) { let count = 0;
+      const hitCount = {};
+      for (const num of ALL_2D) {
+        let count = 0;
         if (ekorLemahSet.has(num)) count++;
         if (kepalaLemahSet.has(num)) count++;
         if (jarakLemahSet.has(num)) count++;
@@ -262,7 +309,6 @@
       return s && s.size > 0 ? Array.from(s).sort().join('*') + '#' : '-';
     }
 
-    // 🔹 Refresh: muat & tampilkan preview
     async function refreshData() {
       showMessage("Mengambil data...");
 
@@ -283,22 +329,18 @@
       cachedS = S;
       cachedK = K;
 
-      // Tampilkan preview
       document.getElementById('preview-r').textContent = formatSet(R);
       document.getElementById('preview-s').textContent = formatSet(S);
       document.getElementById('preview-k').textContent = formatSet(K);
 
       document.getElementById('preview-section').style.display = 'block';
       document.getElementById('btn-ok').style.display = 'block';
-
-      // Sembunyikan hasil akhir
       document.getElementById('ngai-result').style.display = 'none';
       document.getElementById('ngai-result').textContent = 'Klik "OK" untuk gabungkan.';
 
       showMessage("✅ Data dimuat. Klik OK untuk proses.");
     }
 
-    // 🔹 OK: gabungkan & tampilkan hasil akhir
     function processOk() {
       if (!cachedR || !cachedS || !cachedK) {
         document.getElementById('ngai-result').textContent = "❌ Data tidak lengkap. Silakan refresh.";
@@ -312,18 +354,27 @@
       cachedS.forEach(n => count[n]++);
       cachedK.forEach(n => count[n]++);
 
-      const hasil = ALL_2D.filter(num => count[num] >= 2).sort();
-      const text = hasil.length ? hasil.join('*') + '#' : "❌ Tidak ada angka di ≥2 sumber.";
+      const isTwin = (num) => num[0] === num[1];
+
+      // ✨ Logika baru: non-twin harus di 3 sumber, twin cukup di 1+
+      const hasil = ALL_2D.filter(num => {
+        if (isTwin(num)) {
+          return count[num] >= 1; // twin: cukup muncul di 1 sumber
+        } else {
+          return count[num] === 3; // non-twin: wajib di semua 3 sumber
+        }
+      }).sort();
+
+      const text = hasil.length ? hasil.join('*') + '#' : "❌ Tidak ada angka yang memenuhi kriteria.";
 
       document.getElementById('ngai-result').textContent = text;
       document.getElementById('ngai-result').style.display = 'block';
-      showMessage("✅ Hasil NGAI siap.");
+      showMessage("✅ Hasil NGAI (3-sumber + twin khusus) siap.");
     }
 
     document.getElementById('btn-refresh').addEventListener('click', refreshData);
     document.getElementById('btn-ok').addEventListener('click', processOk);
 
-    // Muat otomatis saat halaman dibuka
     refreshData();
   </script>
 </body>
