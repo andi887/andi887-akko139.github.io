@@ -47,6 +47,35 @@
       background: #3367d6;
     }
 
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0 20px;
+    }
+    .action-buttons button {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-save {
+      background: #34a853;
+      color: white;
+    }
+    .btn-save:hover {
+      background: #2d8f47;
+    }
+    .btn-clear {
+      background: #ea4335;
+      color: white;
+    }
+    .btn-clear:hover {
+      background: #d33426;
+    }
+
     .input-group {
       margin: 12px 0;
     }
@@ -68,7 +97,7 @@
       box-sizing: border-box;
     }
 
-    button {
+    button#btn-hitung {
       width: 100%;
       padding: 14px;
       background: #673ab7;
@@ -81,7 +110,7 @@
       margin: 16px 0;
     }
 
-    button:active {
+    button#btn-hitung:active {
       background: #512da8;
       transform: scale(0.99);
     }
@@ -152,6 +181,12 @@
 
     <button id="btn-hitung">Terapkan Semua Rumus</button>
 
+    <!-- Tombol Simpan & Hapus -->
+    <div class="action-buttons">
+      <button id="btn-simpan" class="btn-save">💾 Simpan</button>
+      <button id="btn-hapus" class="btn-clear">🗑️ Hapus</button>
+    </div>
+
     <table id="kamar-table">
       <thead>
         <tr>
@@ -166,7 +201,6 @@
   </div>
 
   <script>
-    // 🔁 Tetap pakai shio internal (logika tidak berubah)
     const shioAngka = {
       1: [1,13,25,37,49,61,73,85,97],
       2: [2,14,26,38,50,62,74,86,98],
@@ -192,95 +226,49 @@
       }
     }
 
-    function getIndex(angka) {
-      return (angka + 5) % 10;
-    }
+    function getIndex(angka) { return (angka + 5) % 10; }
+    function angkaKeShio(n) { n = n % 12; return n === 0 ? 12 : n; }
 
     function hitungDasar2D(duaD) {
-      let total;
-      if (duaD < 10) {
-        total = 0 + duaD;
-      } else {
-        const str = duaD.toString();
-        total = parseInt(str[0], 10) + parseInt(str[1], 10);
-      }
-      while (total >= 10) {
-        total = String(total).split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
-      }
+      let total = duaD < 10 ? duaD : parseInt(duaD.toString()[0]) + parseInt(duaD.toString()[1]);
+      while (total >= 10) total = String(total).split('').reduce((sum, d) => sum + parseInt(d), 0);
       return total === 0 ? 9 : total;
-    }
-
-    function angkaKeShio(n) {
-      n = n % 12;
-      return n === 0 ? 12 : n;
     }
 
     function hitungKamarLemah(tglSeb, tglSkr, empatDLalu, empatDSkr) {
       const kamarRumus = {};
-      for (let i = 1; i <= 12; i++) {
-        kamarRumus[i] = new Set();
-      }
+      for (let i = 1; i <= 12; i++) kamarRumus[i] = new Set();
 
       let str4D = empatDSkr.toString().padStart(4, '0');
-      const AS = parseInt(str4D[0], 10);
-      const KOP = parseInt(str4D[1], 10);
-      const KEPALA = parseInt(str4D[2], 10);
-      const EKOR = parseInt(str4D[3], 10);
-      const duaD = KEPALA * 10 + EKOR;
+      const AS = +str4D[0], KOP = +str4D[1], KEPALA = +str4D[2], EKOR = +str4D[3], duaD = KEPALA * 10 + EKOR;
+      let str4DLalu = empatDLalu.toString().padStart(4, '0');
+      const AS_Lalu = +str4DLalu[0];
 
-      // Rumus 1–13 (gunakan result SEKARANG)
       kamarRumus[angkaKeShio(tglSkr)].add(1);
       kamarRumus[angkaKeShio(tglSkr + 7)].add(2);
       kamarRumus[angkaKeShio(tglSeb + tglSkr)].add(3);
       kamarRumus[angkaKeShio(hitungDasar2D(duaD) + tglSkr)].add(4);
       kamarRumus[angkaKeShio(100 - duaD)].add(5);
       kamarRumus[angkaKeShio(99 - duaD)].add(6);
-
-      const angka7 = getIndex(AS) * 10 + getIndex(KOP);
-      kamarRumus[angkaKeShio(angka7)].add(7);
-
-      const angka8 = getIndex(KEPALA) * 10 + getIndex(EKOR);
-      kamarRumus[angkaKeShio(angka8)].add(8);
-
+      kamarRumus[angkaKeShio(getIndex(AS) * 10 + getIndex(KOP))].add(7);
+      kamarRumus[angkaKeShio(getIndex(KEPALA) * 10 + getIndex(EKOR))].add(8);
       kamarRumus[angkaKeShio(AS * 10 + KOP)].add(9);
       kamarRumus[angkaKeShio(KOP * 10 + KEPALA)].add(10);
 
       const digitKepala = KEPALA.toString();
       for (let s = 1; s <= 12; s++) {
-        const list = shioAngka[s];
-        let ada = false;
-        for (let num of list) {
-          if (num.toString().padStart(2, '0').includes(digitKepala)) {
-            ada = true;
-            break;
-          }
-        }
-        if (!ada) kamarRumus[s].add(11);
+        if (!shioAngka[s].some(num => num.toString().padStart(2, '0').includes(digitKepala)))
+          kamarRumus[s].add(11);
       }
 
       const digitEkor = EKOR.toString();
       for (let s = 1; s <= 12; s++) {
-        const list = shioAngka[s];
-        let ada = false;
-        for (let num of list) {
-          if (num.toString().padStart(2, '0').includes(digitEkor)) {
-            ada = true;
-            break;
-          }
-        }
-        if (!ada) kamarRumus[s].add(12);
+        if (!shioAngka[s].some(num => num.toString().padStart(2, '0').includes(digitEkor)))
+          kamarRumus[s].add(12);
       }
 
-      const angka13 = AS * 10 + EKOR;
-      kamarRumus[angkaKeShio(angka13)].add(13);
-
-      // 🔹 Rumus 14: index(AS_lalu) + index(AS_sekarang)
-      let str4DLalu = empatDLalu.toString().padStart(4, '0');
-      const AS_Lalu = parseInt(str4DLalu[0], 10);
-      const idxLalu = getIndex(AS_Lalu);
-      const idxSkr = getIndex(AS);
-      const angka14 = idxLalu * 10 + idxSkr;
-      kamarRumus[angkaKeShio(angka14)].add(14);
+      kamarRumus[angkaKeShio(AS * 10 + EKOR)].add(13);
+      kamarRumus[angkaKeShio(getIndex(AS_Lalu) * 10 + getIndex(AS))].add(14);
 
       return kamarRumus;
     }
@@ -293,6 +281,66 @@
       }
     }
 
+    // 🔹 LOCALSTORAGE
+    const STORAGE_KEY = 'kamar_data';
+
+    function simpanKeStorage() {
+      const data = {
+        tanggalSebelum: document.getElementById('tanggalSebelum').value.trim(),
+        tanggalSekarang: document.getElementById('tanggalSekarang').value.trim(),
+        result4DLalu: document.getElementById('result4DLalu').value.trim(),
+        result4D: document.getElementById('result4D').value.trim(),
+        hasil: {}
+      };
+
+      // Simpan hasil per kamar
+      for (let i = 1; i <= 12; i++) {
+        const cell = document.getElementById(`rumus-${i}`);
+        if (cell && cell.textContent !== "—") {
+          data.hasil[i] = cell.textContent;
+        }
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function muatDariStorage() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          document.getElementById('tanggalSebelum').value = data.tanggalSebelum || '';
+          document.getElementById('tanggalSekarang').value = data.tanggalSekarang || '';
+          document.getElementById('result4DLalu').value = data.result4DLalu || '';
+          document.getElementById('result4D').value = data.result4D || '';
+
+          if (data.hasil) {
+            // Tunggu tabel dibuat
+            setTimeout(() => {
+              for (let i = 1; i <= 12; i++) {
+                const cell = document.getElementById(`rumus-${i}`);
+                if (cell && data.hasil[i]) {
+                  cell.innerHTML = `<span class="rumus-tag">${data.hasil[i]}</span>`;
+                }
+              }
+            }, 50);
+          }
+        } catch (e) {
+          console.error('Gagal memuat data kamar:', e);
+        }
+      }
+    }
+
+    function bersihkanSemua() {
+      document.getElementById('tanggalSebelum').value = '';
+      document.getElementById('tanggalSekarang').value = '';
+      document.getElementById('result4DLalu').value = '';
+      document.getElementById('result4D').value = '';
+      buatTabelKamar();
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    // 🔹 EVENT HANDLERS
     document.getElementById("btn-hitung").addEventListener("click", () => {
       const seb = document.getElementById("tanggalSebelum").value.trim();
       const skr = document.getElementById("tanggalSekarang").value.trim();
@@ -321,10 +369,34 @@
 
       const hasil = hitungKamarLemah(tglSeb, tglSkr, empatDLalu, empatDSkr);
       tampilkanKamarLemah(hasil);
+      simpanKeStorage(); // Simpan otomatis setelah hitung
     });
 
+    document.getElementById('btn-simpan').addEventListener('click', () => {
+      const seb = document.getElementById("tanggalSebelum").value.trim();
+      const skr = document.getElementById("tanggalSekarang").value.trim();
+      const lalu = document.getElementById("result4DLalu").value.trim();
+      const skr4D = document.getElementById("result4D").value.trim();
+
+      if (!seb || !skr || !lalu || !skr4D) {
+        alert("⚠️ Lengkapi semua input terlebih dahulu.");
+        return;
+      }
+      simpanKeStorage();
+      alert("✅ Data berhasil disimpan ke localStorage!");
+    });
+
+    document.getElementById('btn-hapus').addEventListener('click', () => {
+      if (confirm("Yakin hapus semua data?")) {
+        bersihkanSemua();
+        alert("🗑️ Semua data telah dihapus.");
+      }
+    });
+
+    // 🔹 MUAT SAAT DIBUKA
     document.addEventListener("DOMContentLoaded", () => {
       buatTabelKamar();
+      muatDariStorage();
     });
   </script>
 </body>
