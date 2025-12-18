@@ -16,6 +16,8 @@
       font-size: 1.4em;
       margin: 0 0 16px;
     }
+
+    /* 🔙 Kembali ke Beranda — inline style, konsisten dengan fitur2 & fitur4 */
     .back-home {
       text-align: center;
       margin: 12px 0;
@@ -33,6 +35,7 @@
     .back-home a:hover {
       background: #3367d6;
     }
+
     .btn {
       width: 100%;
       padding: 12px;
@@ -71,6 +74,7 @@
 <body>
   <h1>🔮 ngai</h1>
 
+  <!-- 🔙 Kembali ke Beranda -->
   <div class="back-home">
     <a href="index.html">🔙 Kembali ke Beranda</a>
   </div>
@@ -79,7 +83,7 @@
   <div class="status" id="status"></div>
 
   <div class="section">
-    <div class="title">📌 Rangkuman NGAI (Gabungan Fitur 2 + 3 + 4)</div>
+    <div class="title">📌 Rangkuman NGAI (Angka yang Muncul di ≥2 Sumber)</div>
     <div class="result-box" id="ngai-result">Belum ada data. Silakan generate di fitur lain lalu refresh.</div>
   </div>
 
@@ -119,7 +123,6 @@
       12: ["12","24","36","48","60","72","84","96"]
     };
 
-    const TWIN_NUMBERS = new Set(["00","11","22","33","44","55","66","77","88","99"]);
     const ALL_2D = Array.from({length:100}, (_,i) => i.toString().padStart(2,'0'));
 
     // 🔹 Helper
@@ -162,13 +165,15 @@
       return SHIO_TO_2D[shio] || [];
     }
 
-    // 🔹 Hitung dari data Fitur 3 (Firebase)
-    function hitungDariFitur3(data) {
-      const A = data.A || '';
-      const B = data.B || '';
-      const C = data.C || '';
-      const D = data.D || '';
-      const E = data.E || '';
+    // 🔹 Ambil Himpunan S dari Firebase (Fitur 3)
+    function getHimpunanS(firebaseData) {
+      if (!firebaseData) return new Set();
+
+      const A = firebaseData.A || '';
+      const B = firebaseData.B || '';
+      const C = firebaseData.C || '';
+      const D = firebaseData.D || '';
+      const E = firebaseData.E || '';
 
       const ekorLemahSet = new Set();
       parseDigitParts(B).forEach(d => {
@@ -203,21 +208,14 @@
         hitCount[num] = count;
       }
 
+      // Himpunan S = Angka Bersih (count=0) + Angka Khusus (twin)
       const angkaBersih = ALL_2D.filter(num => hitCount[num] === 0);
-      const out1x = ALL_2D.filter(num => hitCount[num] === 1);
-      const out2x = ALL_2D.filter(num => hitCount[num] === 2);
-      const out3x = ALL_2D.filter(num => hitCount[num] === 3);
-      const out4x = ALL_2D.filter(num => hitCount[num] === 4);
-
-      return {
-        angkaBersih: new Set(angkaBersih),
-        out1x: new Set([...out1x, ...out2x, ...out3x, ...out4x]), // gabung 1x–4x
-        allOut: new Set([...out1x, ...out2x, ...out3x, ...out4x, ...ALL_2D.filter(n => hitCount[n] > 4)])
-      };
+      const twin = ALL_2D.filter(num => num[0] === num[1]);
+      return new Set([...angkaBersih, ...twin]);
     }
 
-    // 🔹 Hitung dari data Fitur 2 (localStorage)
-    function hitungDariFitur2() {
+    // 🔹 Ambil Himpunan R dari localStorage (Fitur 2: rampa40)
+    function getHimpunanR() {
       const saved = localStorage.getItem('fitur2_data');
       if (!saved) return null;
 
@@ -225,24 +223,40 @@
         const data = JSON.parse(saved);
         if (!data.resultsHTML) return null;
 
-        // Ekstrak dari HTML (cara cepat, karena tidak disimpan sebagai data mentah)
         const temp = document.createElement('div');
         temp.innerHTML = data.resultsHTML;
-        const finalDiv = temp.querySelector('.section:last-of-type .value');
-        if (finalDiv) {
-          let text = finalDiv.textContent.trim();
+        // Ambil bagian Rangkuman Final (biasanya bagian terakhir sebelum copy button)
+        const sections = temp.querySelectorAll('.section');
+        if (sections.length === 0) return null;
+
+        // Cari bagian yang mengandung "Rangkuman Final"
+        let finalSection = null;
+        for (let sec of sections) {
+          if (sec.querySelector('h2')?.textContent.includes('Rangkuman Final')) {
+            finalSection = sec;
+            break;
+          }
+        }
+        if (!finalSection) {
+          // fallback: ambil bagian terakhir
+          finalSection = sections[sections.length - 1];
+        }
+
+        const valueDiv = finalSection.querySelector('.value');
+        if (valueDiv) {
+          let text = valueDiv.textContent.trim();
           if (text.endsWith('#')) text = text.slice(0, -1);
           const list = text.split('*').filter(x => x.length === 2);
           return new Set(list);
         }
       } catch (e) {
-        console.error('Gagal ekstrak Fitur 2:', e);
+        console.error('Gagal ekstrak Himpunan R:', e);
       }
       return null;
     }
 
-    // 🔹 Hitung dari data Fitur 4 (localStorage)
-    function hitungDariFitur4() {
+    // 🔹 Ambil Himpunan K dari localStorage (Fitur 4: kamar)
+    function getHimpunanK() {
       const saved = localStorage.getItem('kamar_data');
       if (!saved) return null;
 
@@ -250,45 +264,53 @@
         const data = JSON.parse(saved);
         if (!data.hasil) return null;
 
-        const kamarLemah = [];
+        const kamarKuat = [];
         for (let k = 1; k <= 12; k++) {
-          if (data.hasil[k]) kamarLemah.push(k);
+          // Jika nilainya "—" atau kosong → kamar kuat
+          if (!data.hasil[k] || data.hasil[k] === "—") {
+            kamarKuat.push(k);
+          }
         }
 
-        // Dapatkan 2D lemah
-        const lemahSet = new Set();
-        kamarLemah.forEach(k => {
-          (SHIO_TO_2D[k] || []).forEach(n => lemahSet.add(n));
+        const himpunanK = new Set();
+        kamarKuat.forEach(k => {
+          const nums = SHIO_TO_2D[k] || [];
+          nums.forEach(n => himpunanK.add(n));
         });
-
-        // 2D kuat = bukan lemah
-        const kuatSet = new Set(ALL_2D.filter(n => !lemahSet.has(n)));
-        return kuatSet;
+        return himpunanK;
       } catch (e) {
-        console.error('Gagal ekstrak Fitur 4:', e);
+        console.error('Gagal ekstrak Himpunan K:', e);
       }
       return null;
     }
 
-    // 🔹 Gabungkan Semua
-    function gabungkanData(f2Set, f3Data, f4Set) {
-      if (!f2Set) return "⚠️ Data Fitur 2 belum tersedia.";
-      if (!f3Data) return "⚠️ Data Fitur 3 belum tersedia.";
-      if (!f4Set) return "⚠️ Data Fitur 4 belum tersedia.";
+    // 🔹 Gabungkan & Filter (≥2 sumber)
+    function gabungkanDanFilter(R, S, K) {
+      if (!R || !S || !K) {
+        let msg = "⚠️ Data tidak lengkap:\n";
+        if (!R) msg += "- Fitur 2 (rampa40)\n";
+        if (!S) msg += "- Fitur 3 (saringan)\n";
+        if (!K) msg += "- Fitur 4 (kamar)";
+        return msg;
+      }
 
-      // NGAI = F2 ∩ (F3.angkaBersih ∪ F3.out1x) ∩ F4
-      const kandidat1 = new Set([...f2Set].filter(x => f3Data.angkaBersih.has(x) || f3Data.out1x.has(x)));
-      const hasil = [...kandidat1].filter(x => f4Set.has(x)).sort();
+      const count = {};
+      for (const num of ALL_2D) count[num] = 0;
 
-      return hasil.length ? hasil.join('*') + '#' : "❌ Tidak ada angka yang lolos semua filter.";
+      R.forEach(n => count[n]++);
+      S.forEach(n => count[n]++);
+      K.forEach(n => count[n]++);
+
+      const hasil = ALL_2D.filter(num => count[num] >= 2).sort();
+      return hasil.length ? hasil.join('*') + '#' : "❌ Tidak ada angka yang muncul di ≥2 sumber.";
     }
 
-    // 🔹 Refresh Utama
+    // 🔹 Refresh utama
     async function refreshData() {
       showMessage("Mengambil data...");
 
-      // Ambil dari Firebase (Fitur 3)
-      let f3Data = null;
+      // Ambil data Firebase (Fitur 3)
+      let firebaseData = null;
       try {
         const snapshot = await new Promise((resolve, reject) => {
           const timeout = setTimeout(() => reject(new Error("Timeout")), 5000);
@@ -300,28 +322,24 @@
             reject(err);
           });
         });
-        const val = snapshot.val();
-        if (val) {
-          f3Data = hitungDariFitur3(val);
-        }
+        firebaseData = snapshot.val();
       } catch (err) {
-        console.error("Gagal ambil Firebase:", err);
+        console.warn("Gagal ambil Firebase:", err);
       }
 
-      // Ambil dari localStorage
-      const f2Set = hitungDariFitur2();
-      const f4Set = hitungDariFitur4();
+      const R = getHimpunanR();
+      const S = getHimpunanS(firebaseData);
+      const K = getHimpunanK();
 
-      // Gabungkan
-      const hasil = gabungkanData(f2Set, f3Data, f4Set);
+      const hasil = gabungkanDanFilter(R, S, K);
       document.getElementById('ngai-result').textContent = hasil;
-      showMessage("✅ Data diperbarui.");
+      showMessage("✅ Data NGAI diperbarui.");
     }
 
     // 🔹 Event
     document.getElementById('btn-refresh').addEventListener('click', refreshData);
 
-    // 🔹 Muat otomatis saat halaman dibuka
+    // 🔹 Muat otomatis
     refreshData();
   </script>
 </body>
