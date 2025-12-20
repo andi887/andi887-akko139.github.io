@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -124,11 +125,32 @@
       color: #2c3e50;
     }
   </style>
+
+  <!-- 🔥 Firebase SDK (tanpa spasi!) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
+      authDomain: "nomoromosse.firebaseapp.com",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nomoromosse",
+      storageBucket: "nomoromosse.firebasestorage.app",
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
+    };
+
+    if (!window.firebaseApp) {
+      const app = initializeApp(firebaseConfig);
+      window.firebaseApp = app;
+      window.db = getDatabase(app);
+    }
+  </script>
 </head>
 <body>
   <h1>🔢 saringan</h1>
 
-  <!-- 🔙 Kembali ke Beranda -->
   <div class="back-home">
     <a href="index.html">🔙 Kembali ke Beranda</a>
   </div>
@@ -158,6 +180,12 @@
     <input type="text" id="shioLemah" placeholder="Contoh: 8 atau 8/9">
   </div>
 
+  <!-- 🔹 FITUR BARU: F -->
+  <div class="form-group">
+    <label>F. Dasar Lemah (pisah dengan / jika >1)</label>
+    <input type="text" id="dasarLemah" placeholder="Contoh: 2 atau 2/5/7">
+  </div>
+
   <div class="btn-group">
     <button id="generateBtn" onclick="generate()">Generate</button>
     <button id="saveBtn" onclick="saveToFirebase()">Simpan</button>
@@ -167,42 +195,21 @@
 
   <div id="output"></div>
 
-  <!-- Firebase SDK (Modular) - DIPERBAIKI -->
-  <script type="module">
-    // ================== FIREBASE SETUP ==================
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
-      authDomain: "nomoromosse.firebaseapp.com",
-      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app", // ✅ DIPERBAIKI: hapus spasi
-      projectId: "nomoromosse",
-      storageBucket: "nomoromosse.firebasestorage.app",
-      messagingSenderId: "985183830784",
-      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const fitur3Ref = ref(db, 'fitur3'); // ✅ PATH KONSISTEN: /fitur3
-
-    // ================== HELPER FUNCTIONS ==================
-    function showMessage(text, isError = false) {
-      const el = document.getElementById('status');
-      el.textContent = text;
-      el.style.color = isError ? '#e74c3c' : '#27ae60';
-      setTimeout(() => {
-        if (el.textContent === text) el.textContent = '';
-      }, 3000);
+  <script>
+    // === HELPER: HITUNG DASAR 2D (00-99) ===
+    function hitungDasar2D_2digit(duaDigit) {
+      const a = parseInt(duaDigit[0], 10);
+      const b = parseInt(duaDigit[1], 10);
+      let total = a + b;
+      while (total >= 10) {
+        total = String(total).split('').reduce((sum, d) => sum + parseInt(d), 0);
+      }
+      return total === 0 ? 9 : total;
     }
 
+    // === Fungsi Bantu Lainnya ===
     function getTwinNumbers() {
-      const twins = [];
-      for (let i = 0; i <= 9; i++) {
-        twins.push(i.toString().repeat(2));
-      }
-      return new Set(twins);
+      return new Set(["00","11","22","33","44","55","66","77","88","99"]);
     }
 
     function getShioNumbers(shio) {
@@ -228,107 +235,117 @@
       return result;
     }
 
-    function copyToClipboard(text) {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.position = "fixed";
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-      } catch (err) {
-        console.error("Copy gagal:", err);
-      }
-      document.body.removeChild(textArea);
-    }
-
     function parseShioParts(input) {
       if (!input.trim()) return [];
-      return input
-        .split('/')
-        .map(s => s.trim().replace(/\D/g, ''))
-        .filter(s => s !== '')
-        .map(s => parseInt(s, 10))
-        .filter(n => !isNaN(n) && n >= 1 && n <= 12);
+      return input.split('/').map(s => s.trim().replace(/\D/g, ''))
+                   .filter(s => s !== '')
+                   .map(s => parseInt(s, 10))
+                   .filter(n => !isNaN(n) && n >= 1 && n <= 12);
     }
 
     function parseDigitParts(input) {
       if (!input.trim()) return [];
-      return input
-        .split('/')
-        .map(s => s.trim().replace(/\D/g, ''))
-        .filter(s => s !== '')
-        .join('')
-        .split('')
-        .filter(d => d >= '0' && d <= '9');
+      return input.split('/').map(s => s.trim().replace(/\D/g, ''))
+                   .filter(s => s !== '')
+                   .join('')
+                   .split('')
+                   .filter(d => d >= '0' && d <= '9');
     }
 
-    // ================== GENERATE LOGIC ==================
+    // 🔹 BARU: Parse Dasar Lemah
+    function parseDasarParts(input) {
+      if (!input.trim()) return [];
+      return input.split('/').map(s => s.trim().replace(/\D/g, ''))
+                   .filter(s => s !== '')
+                   .map(s => parseInt(s, 10))
+                   .filter(n => !isNaN(n) && n >= 1 && n <= 9);
+    }
+
+    function copyToClipboard(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+
+    function showMessage(text, isError = false) {
+      const el = document.getElementById('status');
+      el.textContent = text;
+      el.style.color = isError ? '#e74c3c' : '#27ae60';
+      setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 3000);
+    }
+
+    // === GENERATE UTAMA ===
     function generate() {
       const A_input = document.getElementById('angkaKontrol').value;
       const B_input = document.getElementById('ekorLemah').value;
       const C_input = document.getElementById('kepalaLemah').value;
       const D_input = document.getElementById('jarakLemah').value;
       const E_input = document.getElementById('shioLemah').value;
+      const F_input = document.getElementById('dasarLemah').value; // 🔹 BARU
 
       const twinSet = getTwinNumbers();
 
+      // B. Ekor Lemah
       const ekorList = parseDigitParts(B_input);
       const ekorLemahSet = new Set();
-      ekorList.forEach(d => {
-        for (let i = 0; i <= 9; i++) {
-          ekorLemahSet.add(i + '' + d);
-        }
-      });
+      ekorList.forEach(d => { for (let i = 0; i <= 9; i++) ekorLemahSet.add(i + '' + d); });
 
+      // C. Kepala Lemah
       const kepalaList = parseDigitParts(C_input);
       const kepalaLemahSet = new Set();
-      kepalaList.forEach(d => {
-        for (let i = 0; i <= 9; i++) {
-          kepalaLemahSet.add(d + '' + i);
-        }
-      });
+      kepalaList.forEach(d => { for (let i = 0; i <= 9; i++) kepalaLemahSet.add(d + '' + i); });
 
+      // D. Jarak Lemah
       const jarakLemahSet = new Set(parseRange(D_input));
 
+      // E. Shio Lemah
       const shioList = parseShioParts(E_input);
       const shioLemahSet = new Set();
-      shioList.forEach(shio => {
-        getShioNumbers(shio).forEach(num => shioLemahSet.add(num));
-      });
+      shioList.forEach(shio => { getShioNumbers(shio).forEach(num => shioLemahSet.add(num)); });
 
+      // 🔹 F. DASAR LEMAH
+      const dasarList = parseDasarParts(F_input);
+      const dasarLemahSet = new Set();
+      for (let i = 0; i <= 99; i++) {
+        const num = i.toString().padStart(2, '0');
+        const dasar = hitungDasar2D_2digit(num);
+        if (dasarList.includes(dasar)) {
+          dasarLemahSet.add(num);
+        }
+      }
+
+      // A. Angka Kontrol (versi)
       let versions = [];
       if (A_input.trim()) {
-        versions = A_input
-          .split('/')
-          .map(v => v.trim().replace(/\D/g, ''))
-          .filter(v => v.length > 0);
+        versions = A_input.split('/').map(v => v.trim().replace(/\D/g, '')).filter(v => v.length > 0);
       }
       const versionDigitSets = versions.map(ver => new Set(ver.split('')));
 
+      // HITUNG HIT
       const hitCount = {};
-      for (let i = 0; i < 100; i++) {
-        const num = i.toString().padStart(2, '0');
-        let count = 0;
+      const allNumbers = Array.from({length: 100}, (_, i) => i.toString().padStart(2, '0'));
 
+      for (const num of allNumbers) {
+        let count = 0;
         if (ekorLemahSet.has(num)) count++;
         if (kepalaLemahSet.has(num)) count++;
         if (jarakLemahSet.has(num)) count++;
         if (shioLemahSet.has(num)) count++;
-
+        if (dasarLemahSet.has(num)) count++; // 🔹 BARU
         for (const digitSet of versionDigitSets) {
-          if (!digitSet.has(num[0]) && !digitSet.has(num[1])) {
-            count++;
-          }
+          if (!digitSet.has(num[0]) && !digitSet.has(num[1])) count++;
         }
-
         hitCount[num] = count;
       }
 
+      // KELASIFIKASI
       const angkaBersih = [];
       const angkaKhusus = [];
       const outGroups = {};
-      const allNumbers = Array.from({length: 100}, (_, i) => i.toString().padStart(2, '0'));
 
       for (const num of allNumbers) {
         const count = hitCount[num];
@@ -344,6 +361,7 @@
         }
       }
 
+      // TAMPILKAN
       let html = '';
 
       angkaBersih.sort();
@@ -383,16 +401,13 @@
 
       document.getElementById('output').innerHTML = html;
 
-      // Re-attach copy listeners
+      // Salin
       document.querySelectorAll('.copy-btn').forEach(btn => {
-        btn.onclick = () => {
-          const text = btn.getAttribute('data-copy');
-          copyToClipboard(text);
-        };
+        btn.onclick = () => copyToClipboard(btn.getAttribute('data-copy'));
       });
     }
 
-    // ================== FIREBASE FUNCTIONS ==================
+    // === FIREBASE ===
     async function saveToFirebase() {
       const data = {
         A: document.getElementById('angkaKontrol').value,
@@ -400,16 +415,18 @@
         C: document.getElementById('kepalaLemah').value,
         D: document.getElementById('jarakLemah').value,
         E: document.getElementById('shioLemah').value,
+        F: document.getElementById('dasarLemah').value, // 🔹 SIMPAN F
         timestamp: Date.now()
       };
 
       try {
         showMessage("Menyimpan...");
-        await set(fitur3Ref, data);
-        showMessage("✅ Data berhasil disimpan ke cloud!", false);
-      } catch (error) {
-        console.error("Gagal simpan:", error);
-        showMessage("❌ Gagal menyimpan ke cloud", true);
+        const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+        await set(ref(window.db, 'fitur3'), data);
+        showMessage("✅ Tersimpan ke cloud!", false);
+      } catch (e) {
+        console.error(e);
+        showMessage("❌ Gagal simpan ke cloud", true);
       }
     }
 
@@ -419,51 +436,51 @@
       document.getElementById('kepalaLemah').value = '';
       document.getElementById('jarakLemah').value = '';
       document.getElementById('shioLemah').value = '';
+      document.getElementById('dasarLemah').value = ''; // 🔹
       document.getElementById('output').innerHTML = '';
-      
+
       try {
-        await remove(fitur3Ref);
+        const { ref, remove } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+        await remove(ref(window.db, 'fitur3'));
         showMessage("✅ Data di cloud dihapus", false);
-      } catch (error) {
-        console.error("Gagal hapus:", error);
+      } catch (e) {
         showMessage("ℹ️ Input lokal dihapus", false);
       }
     }
 
-    // ================== REAL-TIME LISTENER ==================
     function startFirebaseListener() {
-      onValue(fitur3Ref, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          document.getElementById('angkaKontrol').value = data.A || '';
-          document.getElementById('ekorLemah').value = data.B || '';
-          document.getElementById('kepalaLemah').value = data.C || '';
-          document.getElementById('jarakLemah').value = data.D || '';
-          document.getElementById('shioLemah').value = data.E || '';
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js").then(({ ref, onValue }) => {
+        onValue(ref(window.db, 'fitur3'), (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            document.getElementById('angkaKontrol').value = data.A || '';
+            document.getElementById('ekorLemah').value = data.B || '';
+            document.getElementById('kepalaLemah').value = data.C || '';
+            document.getElementById('jarakLemah').value = data.D || '';
+            document.getElementById('shioLemah').value = data.E || '';
+            document.getElementById('dasarLemah').value = data.F || ''; // 🔹
 
-          // ✅ AUTO-GENERATE jika semua field ada
-          const hasData = data.A || data.B || data.C || data.D || data.E;
-          if (hasData) {
-            // Tunda sebentar agar DOM siap
             setTimeout(generate, 100);
+          } else {
+            document.getElementById('output').innerHTML = '';
           }
-        } else {
-          document.getElementById('output').innerHTML = '';
-        }
-      }, (error) => {
-        console.warn("Firebase error:", error);
-        showMessage("⚠️ Gagal terhubung ke Firebase", true);
+        });
       });
     }
 
-    // ================== BUTTON BINDINGS ==================
+    // Global
     window.generate = generate;
     window.saveToFirebase = saveToFirebase;
     window.clearAll = clearAll;
 
-    // ================== INIT ==================
+    // Init
     document.addEventListener('DOMContentLoaded', () => {
-      startFirebaseListener();
+      const check = setInterval(() => {
+        if (window.db) {
+          clearInterval(check);
+          startFirebaseListener();
+        }
+      }, 100);
     });
   </script>
 </body>
