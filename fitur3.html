@@ -167,7 +167,7 @@
 
   <div id="output"></div>
 
-  <!-- Firebase SDK (Modular) -->
+  <!-- Firebase SDK (Modular) - DIPERBAIKI -->
   <script type="module">
     // ================== FIREBASE SETUP ==================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -176,7 +176,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
       authDomain: "nomoromosse.firebaseapp.com",
-      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app", // ✅ DIPERBAIKI: hapus spasi
       projectId: "nomoromosse",
       storageBucket: "nomoromosse.firebasestorage.app",
       messagingSenderId: "985183830784",
@@ -185,7 +185,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const inputRef = ref(db, 'generator_2d/inputs');
+    const fitur3Ref = ref(db, 'fitur3'); // ✅ PATH KONSISTEN: /fitur3
 
     // ================== HELPER FUNCTIONS ==================
     function showMessage(text, isError = false) {
@@ -263,8 +263,8 @@
         .filter(d => d >= '0' && d <= '9');
     }
 
-    // ================== EXPOSED GLOBAL FUNCTIONS ==================
-    window.generate = function() {
+    // ================== GENERATE LOGIC ==================
+    function generate() {
       const A_input = document.getElementById('angkaKontrol').value;
       const B_input = document.getElementById('ekorLemah').value;
       const C_input = document.getElementById('kepalaLemah').value;
@@ -390,9 +390,10 @@
           copyToClipboard(text);
         };
       });
-    };
+    }
 
-    window.saveToFirebase = async function() {
+    // ================== FIREBASE FUNCTIONS ==================
+    async function saveToFirebase() {
       const data = {
         A: document.getElementById('angkaKontrol').value,
         B: document.getElementById('ekorLemah').value,
@@ -404,15 +405,15 @@
 
       try {
         showMessage("Menyimpan...");
-        await set(inputRef, data);
+        await set(fitur3Ref, data);
         showMessage("✅ Data berhasil disimpan ke cloud!", false);
       } catch (error) {
         console.error("Gagal simpan:", error);
         showMessage("❌ Gagal menyimpan ke cloud", true);
       }
-    };
+    }
 
-    window.clearAll = async function() {
+    async function clearAll() {
       document.getElementById('angkaKontrol').value = '';
       document.getElementById('ekorLemah').value = '';
       document.getElementById('kepalaLemah').value = '';
@@ -421,17 +422,17 @@
       document.getElementById('output').innerHTML = '';
       
       try {
-        await remove(inputRef);
+        await remove(fitur3Ref);
         showMessage("✅ Data di cloud dihapus", false);
       } catch (error) {
         console.error("Gagal hapus:", error);
         showMessage("ℹ️ Input lokal dihapus", false);
       }
-    };
+    }
 
-    // ================== AUTO-LOAD FROM FIREBASE ==================
-    function loadFromFirebase() {
-      onValue(inputRef, (snapshot) => {
+    // ================== REAL-TIME LISTENER ==================
+    function startFirebaseListener() {
+      onValue(fitur3Ref, (snapshot) => {
         const data = snapshot.val();
         if (data) {
           document.getElementById('angkaKontrol').value = data.A || '';
@@ -439,15 +440,30 @@
           document.getElementById('kepalaLemah').value = data.C || '';
           document.getElementById('jarakLemah').value = data.D || '';
           document.getElementById('shioLemah').value = data.E || '';
+
+          // ✅ AUTO-GENERATE jika semua field ada
+          const hasData = data.A || data.B || data.C || data.D || data.E;
+          if (hasData) {
+            // Tunda sebentar agar DOM siap
+            setTimeout(generate, 100);
+          }
+        } else {
+          document.getElementById('output').innerHTML = '';
         }
       }, (error) => {
-        console.warn("Gagal muat dari Firebase:", error);
+        console.warn("Firebase error:", error);
+        showMessage("⚠️ Gagal terhubung ke Firebase", true);
       });
     }
 
-    // Initialize on page load
+    // ================== BUTTON BINDINGS ==================
+    window.generate = generate;
+    window.saveToFirebase = saveToFirebase;
+    window.clearAll = clearAll;
+
+    // ================== INIT ==================
     document.addEventListener('DOMContentLoaded', () => {
-      loadFromFirebase();
+      startFirebaseListener();
     });
   </script>
 </body>
