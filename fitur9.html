@@ -5,100 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dasar Lemah 2D</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-      padding: 20px;
-      margin: 0;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-      margin-top: 0;
-    }
-    .input-group {
-      display: flex;
-      gap: 10px;
-      margin: 15px 0;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-    }
-    input {
-      flex: 1;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #2980b9;
-    }
-    .result {
-      margin: 15px 0;
-      padding: 12px;
-      background-color: #eaf7ff;
-      border-left: 4px solid #3498db;
-      display: none;
-    }
-    .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .actions button {
-      flex: 1;
-    }
-    .btn-home {
-      background-color: #2ecc71;
-    }
-    .btn-home:hover {
-      background-color: #27ae60;
-    }
-    .btn-delete {
-      background-color: #e74c3c;
-    }
-    .btn-delete:hover {
-      background-color: #c0392b;
-    }
-    .saved-list {
-      margin-top: 20px;
-      border-top: 1px solid #eee;
-      padding-top: 15px;
-    }
-    .saved-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .saved-item:last-child {
-      border-bottom: none;
-    }
-    .saved-item strong {
-      color: #2c3e50;
-    }
+    /* ... (tetap gunakan style yang sama dari kode aslimu) ... */
   </style>
 
-  <!-- 🔥 Firebase SDK (modular) - DIPERBAIKI -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  <!-- 🔥 Gunakan Compat Mode seperti fitur1 -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
+  <script>
+    // === Konfigurasi Firebase (sama di semua fitur) ===
     const firebaseConfig = {
       apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
       authDomain: "nomoromosse.firebaseapp.com",
@@ -109,236 +24,180 @@
       appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
     };
 
-    const app = initializeApp(firebaseConfig);
-    window.db = getDatabase(app);
-    window.fitur9Ref = ref(window.db, 'fitur9');
+    // Initialize sekali
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const fitur9Ref = database.ref('fitur9');
   </script>
 </head>
 <body>
-  <div class="container">
-    <h1>Dasar Lemah 2D</h1>
+  <!-- ... (sama persis seperti struktur HTML aslimu) ... -->
+  <!-- Ganti semua `window.db` dan `ref(window.db, ...)` dengan `database` -->
+</body>
 
-    <div class="input-group">
-      <input type="text" id="input2D" placeholder="Masukkan 2D, contoh: 01" maxlength="2" />
-      <button onclick="generateResult()">Cari</button>
-    </div>
+<script>
+  // === RANDOM TERKENDALI (tetap sama) ===
+  function SeededRandom(seed) {
+    this.seed = seed % 2147483647;
+    if (this.seed <= 0) this.seed += 2147483646;
+  }
+  SeededRandom.prototype.next = function() {
+    return this.seed = this.seed * 16807 % 2147483647;
+  };
+  SeededRandom.prototype.random = function() {
+    return (this.next() - 1) / 2147483646;
+  };
 
-    <div class="result" id="resultBox">
-      <div>2D: <strong id="show2D">--</strong></div>
-      <div>Dasar Lemah: <strong id="showDasar">--</strong></div>
-      <div class="actions">
-        <button class="btn-home" onclick="saveEntry()">Simpan</button>
-        <button onclick="editEntry()">Edit</button>
-        <button class="btn-delete" onclick="deleteEntry()">Hapus</button>
-      </div>
-    </div>
-
-    <div class="saved-list" id="savedList">
-      <h3>Data Tersimpan</h3>
-      <p><em>Memuat data dari cloud...</em></p>
-    </div>
-
-    <div style="text-align: center; margin-top: 20px;">
-      <a href="index.html" style="display: inline-block; padding: 10px 20px; background-color: #9b59b6; color: white; text-decoration: none; border-radius: 4px;">
-        ← Kembali ke Beranda
-      </a>
-    </div>
-  </div>
-
-  <script>
-    // === RANDOM TERKENDALI (SEED FIX) ===
-    function SeededRandom(seed) {
-      this.seed = seed % 2147483647;
-      if (this.seed <= 0) this.seed += 2147483646;
+  function generateFullWeakMap() {
+    const weakMap = {};
+    const seed = 12345;
+    const rand = new SeededRandom(seed);
+    for (let num = 0; num <= 99; num++) {
+      let d1 = Math.floor(rand.random() * 9) + 1;
+      let d2 = Math.floor(rand.random() * 9) + 1;
+      if (d1 === d2) d2 = d1 === 9 ? 1 : d1 + 1;
+      const key = num.toString().padStart(2, '0');
+      weakMap[key] = [d1, d2];
     }
-    SeededRandom.prototype.next = function() {
-      return this.seed = this.seed * 16807 % 2147483647;
-    };
-    SeededRandom.prototype.random = function() {
-      return (this.next() - 1) / 2147483646;
-    };
+    weakMap['28'] = [3, 4];
+    weakMap['82'] = [1, 2];
+    return weakMap;
+  }
 
-    // === GENERATE DASAR LEMAH UNTUK SEMUA 2D ===
-    function generateFullWeakMap() {
-      const weakMap = {};
-      const seed = 12345;
-      const rand = new SeededRandom(seed);
+  const fullWeakMap = generateFullWeakMap();
+  let current2D = null;
+  let savedData = {};
 
-      for (let num = 0; num <= 99; num++) {
-        let d1 = Math.floor(rand.random() * 9) + 1;
-        let d2 = Math.floor(rand.random() * 9) + 1;
-        if (d1 === d2) d2 = d1 === 9 ? 1 : d1 + 1;
-        const key = num.toString().padStart(2, '0');
-        weakMap[key] = [d1, d2];
-      }
-
-      // Override khusus
-      weakMap['28'] = [3, 4];
-      weakMap['82'] = [1, 2];
-
-      return weakMap;
+  // === GUNAKAN `database` (bukan window.db) ===
+  function generateResult() {
+    const input = document.getElementById('input2D').value.trim();
+    if (!/^\d{1,2}$/.test(input)) {
+      alert("Masukkan angka 2 digit (00–99).");
+      return;
     }
-
-    const fullWeakMap = generateFullWeakMap();
-    let current2D = null;
-    let savedData = {}; // Menyimpan data dari Firebase
-
-    // === TAMPILKAN HASIL ===
-    function generateResult() {
-      const input = document.getElementById('input2D').value.trim();
-      if (!/^\d{1,2}$/.test(input)) {
-        alert("Masukkan angka 2 digit (00–99).");
-        return;
-      }
-      const key = input.padStart(2, '0');
-      if (!(key in fullWeakMap)) {
-        alert("Nomor harus antara 00–99.");
-        return;
-      }
-
-      // Gunakan override dari Firebase jika ada, else gunakan default
-      const [d1, d2] = savedData[key] || fullWeakMap[key];
-      current2D = key;
-
-      document.getElementById('show2D').textContent = key;
-      document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
-      document.getElementById('resultBox').style.display = 'block';
-      document.getElementById('input2D').value = key;
+    const key = input.padStart(2, '0');
+    if (!(key in fullWeakMap)) {
+      alert("Nomor harus antara 00–99.");
+      return;
     }
+    const [d1, d2] = savedData[key] || fullWeakMap[key];
+    current2D = key;
+    document.getElementById('show2D').textContent = key;
+    document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
+    document.getElementById('resultBox').style.display = 'block';
+    document.getElementById('input2D').value = key;
+  }
 
-    // === SIMPAN KE FIREBASE ===
-    async function saveEntry() {
-      if (!current2D) {
-        alert("Tidak ada data untuk disimpan.");
-        return;
-      }
-      const defaultVal = fullWeakMap[current2D];
-      const currentVal = savedData[current2D] || defaultVal;
-
-      try {
-        await set(ref(window.db, `fitur9/${current2D}`), currentVal);
-        alert("Data tersimpan ke cloud.");
-      } catch (e) {
-        console.error("Firebase save error:", e);
-        alert("Gagal menyimpan ke cloud. Periksa koneksi atau konfigurasi Firebase.");
-      }
+  // === SIMPAN (pakai database.compat) ===
+  function saveEntry() {
+    if (!current2D) {
+      alert("Tidak ada data untuk disimpan.");
+      return;
     }
+    const currentVal = savedData[current2D] || fullWeakMap[current2D];
+    database.ref(`fitur9/${current2D}`).set(currentVal)
+      .then(() => alert("Data tersimpan ke cloud."))
+      .catch(e => {
+        console.error(e);
+        alert("Gagal menyimpan ke cloud.");
+      });
+  }
 
-    // === EDIT ===
-    async function editEntry() {
-      if (!current2D) {
-        alert("Tidak ada data aktif.");
-        return;
-      }
-      const newData = prompt(`Edit dasar lemah untuk ${current2D} (format: d1,d2, contoh: 5,7)`);
-      if (newData) {
-        const parts = newData.split(',').map(p => p.trim());
-        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-          const [d1, d2] = parts.map(Number);
-          if (d1 >= 1 && d1 <= 9 && d2 >= 1 && d2 <= 9 && d1 !== d2) {
-            try {
-              await set(ref(window.db, `fitur9/${current2D}`), [d1, d2]);
-              alert("Data diperbarui di cloud.");
-            } catch (e) {
+  function editEntry() {
+    if (!current2D) {
+      alert("Tidak ada data aktif.");
+      return;
+    }
+    const newData = prompt(`Edit dasar lemah untuk ${current2D} (format: d1,d2)`);
+    if (newData) {
+      const parts = newData.split(',').map(p => p.trim());
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        const [d1, d2] = parts.map(Number);
+        if (d1 >= 1 && d1 <= 9 && d2 >= 1 && d2 <= 9 && d1 !== d2) {
+          database.ref(`fitur9/${current2D}`).set([d1, d2])
+            .then(() => alert("Data diperbarui di cloud."))
+            .catch(e => {
               console.error(e);
               alert("Gagal memperbarui.");
-            }
-          } else {
-            alert("Nilai harus angka 1–9 dan berbeda.");
-          }
+            });
         } else {
-          alert("Format salah. Gunakan: d1,d2");
+          alert("Nilai harus angka 1–9 dan berbeda.");
         }
+      } else {
+        alert("Format salah. Gunakan: d1,d2");
       }
     }
+  }
 
-    // === HAPUS DARI FIREBASE ===
-    async function deleteEntry() {
-      if (!current2D) {
-        alert("Tidak ada data aktif.");
-        return;
-      }
-      if (confirm(`Hapus data untuk ${current2D} dari cloud?`)) {
-        try {
-          await remove(ref(window.db, `fitur9/${current2D}`));
+  function deleteEntry() {
+    if (!current2D) {
+      alert("Tidak ada data aktif.");
+      return;
+    }
+    if (confirm(`Hapus data untuk ${current2D} dari cloud?`)) {
+      database.ref(`fitur9/${current2D}`).remove()
+        .then(() => {
           document.getElementById('resultBox').style.display = 'none';
           current2D = null;
           alert("Data dihapus dari cloud.");
-        } catch (e) {
+        })
+        .catch(e => {
           console.error(e);
           alert("Gagal menghapus.");
-        }
-      }
-    }
-
-    // === PAKAI DATA TERSIMPAN ===
-    function useSaved(key) {
-      current2D = key;
-      const [d1, d2] = savedData[key] || fullWeakMap[key];
-      document.getElementById('show2D').textContent = key;
-      document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
-      document.getElementById('resultBox').style.display = 'block';
-      document.getElementById('input2D').value = key;
-    }
-
-    // === TAMPILKAN DAFTAR TERSIMPAN ===
-    function renderSavedList() {
-      const container = document.getElementById('savedList');
-      const keys = Object.keys(savedData).sort();
-      let html = '<h3>Data Tersimpan</h3>';
-      if (keys.length === 0) {
-        html += '<p><em>Tidak ada data tersimpan di cloud.</em></p>';
-      } else {
-        html += '<div>';
-        keys.forEach(key => {
-          const [d1, d2] = savedData[key];
-          html += `
-            <div class="saved-item">
-              <span><strong>${key}</strong>: ${d1} & ${d2}</span>
-              <button onclick="useSaved('${key}')" style="padding:4px 8px;font-size:12px;">Pakai</button>
-            </div>
-          `;
         });
-        html += '</div>';
-      }
-      container.innerHTML = html;
     }
+  }
 
-    // === REAL-TIME FIREBASE LISTENER ===
-    function startFirebaseListener() {
-      onValue(window.fitur9Ref, (snapshot) => {
-        savedData = snapshot.val() || {};
-        renderSavedList();
-        if (current2D && document.getElementById('resultBox').style.display !== 'none') {
-          const [d1, d2] = savedData[current2D] || fullWeakMap[current2D];
-          document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
-        }
-      }, (error) => {
-        console.error("Firebase error:", error);
-        document.getElementById('savedList').innerHTML = '<h3>Data Tersimpan</h3><p>Gagal memuat dari cloud.</p>';
+  function useSaved(key) {
+    current2D = key;
+    const [d1, d2] = savedData[key] || fullWeakMap[key];
+    document.getElementById('show2D').textContent = key;
+    document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
+    document.getElementById('resultBox').style.display = 'block';
+    document.getElementById('input2D').value = key;
+  }
+
+  function renderSavedList() {
+    const container = document.getElementById('savedList');
+    const keys = Object.keys(savedData).sort();
+    let html = '<h3>Data Tersimpan</h3>';
+    if (keys.length === 0) {
+      html += '<p><em>Tidak ada data tersimpan di cloud.</em></p>';
+    } else {
+      html += '<div>';
+      keys.forEach(key => {
+        const [d1, d2] = savedData[key];
+        html += `<div class="saved-item"><span><strong>${key}</strong>: ${d1} & ${d2}</span><button onclick="useSaved('${key}')" style="padding:4px 8px;font-size:12px;">Pakai</button></div>`;
       });
+      html += '</div>';
     }
+    container.innerHTML = html;
+  }
 
-    // === EKSPOR FUNGSI GLOBAL ===
-    window.generateResult = generateResult;
-    window.saveEntry = saveEntry;
-    window.editEntry = editEntry;
-    window.deleteEntry = deleteEntry;
-    window.useSaved = useSaved;
+  // === REALTIME LISTENER ===
+  fitur9Ref.on('value', (snapshot) => {
+    savedData = snapshot.val() || {};
+    renderSavedList();
+    if (current2D && document.getElementById('resultBox').style.display !== 'none') {
+      const [d1, d2] = savedData[current2D] || fullWeakMap[current2D];
+      document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
+    }
+  }, (error) => {
+    console.error("Firebase error:", error);
+    document.getElementById('savedList').innerHTML = '<h3>Data Tersimpan</h3><p>Gagal memuat dari cloud.</p>';
+  });
 
-    // === INISIALISASI ===
-    document.addEventListener('DOMContentLoaded', () => {
-      const check = setInterval(() => {
-        if (window.db) {
-          clearInterval(check);
-          startFirebaseListener();
-        }
-      }, 100);
+  // === GLOBAL ===
+  window.generateResult = generateResult;
+  window.saveEntry = saveEntry;
+  window.editEntry = editEntry;
+  window.deleteEntry = deleteEntry;
+  window.useSaved = useSaved;
 
-      document.getElementById('input2D').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') generateResult();
-      });
-    });
-  </script>
+  // Tidak perlu cek window.db — database sudah siap sejak awal
+  document.getElementById('input2D').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') generateResult();
+  });
+</script>
 </body>
 </html>
