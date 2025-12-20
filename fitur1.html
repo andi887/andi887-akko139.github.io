@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>data market</title>
   <style>
-    /* === GAYA SAMA SEPERTI SEBELUMNYA === */
     * {
       margin: 0;
       padding: 0;
@@ -137,18 +136,13 @@
   <div id="status"></div>
   <div id="fitur1-container"></div>
 
-  <!-- 🔥 INTEGRASI FIREBASE: DISEDIAKAN DARI FILE EKSTERNAL -->
-  <script type="module">
-    // === IMPOR DARI FILE KONFIGURASI TERPUSAT ===
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    
-    // Muat konfigurasi dari file terpisah
-    import "./firebase-config.js"; // pastikan file ini ada di folder yang sama
+  <!-- 🔥 Firebase SDK (versi 8.10.1 - non-module) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="firebase-config.js"></script>
 
-    // Dapatkan instance database yang sudah diinisialisasi
-    const database = getDatabase();
-
-    // === KONSTANTA & FUNGSI PERHITUNGAN (100% DIPERTAHANKAN) ===
+  <script>
+    // === SEMUA KONSTANTA & FUNGSI PERHITUNGAN (100% DIPERTAHANKAN) ===
     const TABLE_HEADERS = ["res", "B", "C", "D", "G", "H", "I", "J", "K", "R", "Y", "A", "M", "N", "L"];
     const ACTION_HEADER = "Aksi";
     const KONTROL_B = {1:["1","2","6","7","8","9"],2:["0","2","3","7","8","9"],3:["0","1","3","4","8","9"],4:["0","1","2","4","5","9"],5:["0","1","2","3","5","6"],6:["1","2","3","4","6","7"],7:["2","3","4","5","7","8"],8:["3","4","5","6","8","9"],9:["0","4","5","6","7","9"],0:["1","2","3","4","5","6"]};
@@ -164,9 +158,7 @@
     const KONTROL_M = {0:["9","0","1","2","3"],1:["8","9","0","1","2"],2:["3","4","5","6","7"],3:["3","4","5","6","7"],4:["5","6","7","8","9"],5:["0","1","2","3","4"],6:["7","8","9","0","1"],7:["2","3","4","5","6"],8:["1","2","3","4","5"],9:["4","5","6","7","8"]};
     const KONTROL_N = {0:["1","4","6","9"],1:["0","2","5","7"],2:["1","3","6","8"],3:["2","4","7","9"],4:["0","3","5","8"],5:["6","4","1","9"],6:["7","5","0","2"],7:["8","6","3","1"],8:["9","7","4","2"],9:["0","8","5","3"]};
 
-    // --- Fungsi calculateKontrolB hingga calculateKontrolN: SAMA 100% ---
-    // [SEMUA FUNGSI PERHITUNGAN DIPERTAHANKAN UTUH — TIDAK DIUBAH SEDIKIT PUN]
-
+    // === FUNGSI PERHITUNGAN (tidak diubah sedikit pun) ===
     function calculateKontrolB(resSourceValue, resTargetValue) {
       if (!/^\d+$/.test(resSourceValue) || resSourceValue.length < 2 || !/^\d+$/.test(resTargetValue) || resTargetValue.length < 2) {
         return { value: "", isError: false };
@@ -419,7 +411,7 @@
       else return { value: "X", isError: true };
     }
 
-    // === LOGIKA TABEL & PERHITUNGAN (100% DIPERTAHANKAN) ===
+    // === LOGIKA TABEL ===
     function calculateRow(targetRow) {
       const tbody = targetRow.parentElement;
       const allRows = Array.from(tbody.querySelectorAll('tr'));
@@ -540,7 +532,7 @@
       saveDataToFirebase(tableId);
     }
 
-    // === FIREBASE: SIMPAN & MUAT DATA (TANPA UBAH LOGIKA) ===
+    // === FIREBASE INTEGRATION (non-module) ===
     function showStatus(msg, isSuccess = true) {
       const statusEl = document.getElementById('status');
       statusEl.textContent = msg;
@@ -548,12 +540,12 @@
       setTimeout(() => statusEl.textContent = '', 3000);
     }
 
-    async function saveDataToFirebase(tableId) {
+    function saveDataToFirebase(tableId) {
       try {
         const table = document.getElementById(tableId);
         const rows = Array.from(table.querySelectorAll("tbody tr"));
         const data = rows.map(row => Array.from(row.querySelectorAll("input")).map(inp => inp.value));
-        await set(ref(database, `data-market/${tableId}`), data);
+        firebase.database().ref(`data-market/${tableId}`).set(data);
         showStatus(`✓ ${tableId} disimpan`, true);
       } catch (error) {
         console.error("Gagal simpan ke Firebase:", error);
@@ -561,31 +553,32 @@
       }
     }
 
-    async function loadDataFromFirebase(tableId) {
+    function loadDataFromFirebase(tableId) {
       const tbody = document.getElementById(tableId).querySelector("tbody");
       tbody.innerHTML = "";
-      try {
-        const snapshot = await get(ref(database, `data-market/${tableId}`));
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          data.forEach(rowData => {
-            const tr = createRow();
-            const inputs = tr.querySelectorAll("input");
-            rowData.forEach((val, i) => {
-              if (inputs[i]) inputs[i].value = val;
+      firebase.database().ref(`data-market/${tableId}`).once('value')
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            data.forEach(rowData => {
+              const tr = createRow();
+              const inputs = tr.querySelectorAll("input");
+              rowData.forEach((val, i) => {
+                if (inputs[i]) inputs[i].value = val;
+              });
+              tbody.appendChild(tr);
             });
-            tbody.appendChild(tr);
-          });
-          const first = tbody.querySelector('tr');
-          if (first) recalculateFrom(first);
-        } else {
+            const firstRow = tbody.querySelector('tr');
+            if (firstRow) recalculateFrom(firstRow);
+          } else {
+            addRow(tableId);
+          }
+        })
+        .catch(error => {
+          console.error("Gagal muat data:", error);
+          showStatus("✗ Gagal memuat data", false);
           addRow(tableId);
-        }
-      } catch (error) {
-        console.error("Gagal muat data:", error);
-        showStatus("✗ Gagal memuat data", false);
-        addRow(tableId);
-      }
+        });
     }
 
     function initMarket(marketKey) {
@@ -642,8 +635,5 @@
       });
     });
   </script>
-
-  <!-- 📌 MUAT FIREBASE CONFIG DARI FILE EKSTERNAL -->
-  <script type="module" src="./firebase-config.js"></script>
 </body>
 </html>
