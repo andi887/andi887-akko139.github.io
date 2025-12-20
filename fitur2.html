@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -128,7 +127,6 @@
       display: none;
     }
 
-    /* Warna frekuensi hingga 28 */
     .freq-1 { color: #107c10; background-color: #e6f4ea; }
     .freq-2 { color: #8b5cf6; background-color: #f0e6ff; }
     .freq-3 { color: #dc2626; background-color: #fee2e2; }
@@ -172,6 +170,26 @@
       background: #388e3c;
     }
   </style>
+
+  <!-- 🔥 Firebase SDK (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    // 🔐 Konfigurasi Firebase — sesuaikan jika berbeda
+    const firebaseConfig = {
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
+      authDomain: "nomoromosse.firebaseapp.com",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nomoromosse",
+      storageBucket: "nomoromosse.firebasestorage.app",
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window.db = getDatabase(app);
+  </script>
 </head>
 <body>
   <div class="container">
@@ -205,8 +223,8 @@
     <button id="generateBtn">Generate 2D + Kamar Lemah</button>
     
     <div class="action-buttons">
-      <button id="saveBtn" class="btn-save">💾 Simpan ke LocalStorage</button>
-      <button id="clearBtn" class="btn-clear">🗑️ Hapus & Bersihkan</button>
+      <button id="saveBtn" class="btn-save">💾 Simpan ke Firebase</button>
+      <button id="clearBtn" class="btn-clear">🗑️ Hapus Data Firebase</button>
     </div>
     
     <div id="error" class="error"></div>
@@ -551,87 +569,98 @@
       };
     }
 
-    // ─── LOCALSTORAGE ────────────────────────────────────────────────────
-    const STORAGE_KEY = 'fitur2_data';
-
-    function saveToStorage() {
-      const data = {
-        currResult: document.getElementById('currResult').value.trim(),
-        tanggalSebelum: document.getElementById('tanggalSebelum').value.trim(),
-        tanggalSekarang: document.getElementById('tanggalSekarang').value.trim(),
-        result4DLalu: document.getElementById('result4DLalu').value.trim(),
-        resultsHTML: document.getElementById('resultsContainer').innerHTML
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function loadFromStorage() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          document.getElementById('currResult').value = data.currResult || '';
-          document.getElementById('tanggalSebelum').value = data.tanggalSebelum || '';
-          document.getElementById('tanggalSekarang').value = data.tanggalSekarang || '';
-          document.getElementById('result4DLalu').value = data.result4DLalu || '';
-          if (data.resultsHTML) {
-            document.getElementById('resultsContainer').innerHTML = data.resultsHTML;
-            // Re-attach copy listener
-            const copyBtn = document.getElementById('copyFinalBtn');
-            if (copyBtn) {
-              copyBtn.onclick = () => {
-                const summaryDiv = copyBtn.previousElementSibling;
-                const text = summaryDiv.textContent.trim();
-                copyToClipboard(text).then(() => {
-                  const notice = document.createElement('div');
-                  notice.textContent = '✅ Rangkuman tersalin!';
-                  notice.style.cssText = `
-                    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-                    background: #4caf50; color: white; padding: 10px 20px; border-radius: 6px;
-                    font-weight: bold; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                  `;
-                  document.body.appendChild(notice);
-                  setTimeout(() => document.body.removeChild(notice), 2000);
-                }).catch(() => alert('Gagal menyalin.'));
-              };
-            }
-          }
-        } catch (e) {
-          console.error('Gagal memuat data:', e);
-        }
-      }
-    }
-
-    function clearStorage() {
-      localStorage.removeItem(STORAGE_KEY);
-      document.getElementById('currResult').value = '';
-      document.getElementById('tanggalSebelum').value = '';
-      document.getElementById('tanggalSekarang').value = '';
-      document.getElementById('result4DLalu').value = '';
-      document.getElementById('resultsContainer').innerHTML = '';
-      document.getElementById('error').style.display = 'none';
-    }
-
-    // ─── EVENT HANDLERS ──────────────────────────────────────────────────
-    document.getElementById('saveBtn').addEventListener('click', () => {
+    // ─── FIREBASE: SIMPAN & HAPUS ───────────────────────────────────────
+    async function saveToFirebase() {
       const curr = document.getElementById('currResult').value.trim();
       const tglSeb = document.getElementById('tanggalSebelum').value.trim();
       const tglSkr = document.getElementById('tanggalSekarang').value.trim();
       const lalu = document.getElementById('result4DLalu').value.trim();
+
       if (curr && tglSeb && tglSkr && lalu) {
-        saveToStorage();
-        alert('✅ Data berhasil disimpan ke localStorage!');
+        try {
+          await set(ref(window.db, 'fitur2'), {
+            currResult: curr,
+            tanggalSebelum: tglSeb,
+            tanggalSekarang: tglSkr,
+            result4DLalu: lalu,
+            timestamp: Date.now()
+          });
+          console.log('✅ Data Fitur2 tersimpan ke Firebase');
+        } catch (e) {
+          console.error('❌ Gagal simpan ke Firebase:', e);
+          alert('Gagal menyimpan ke Firebase. Cek koneksi internet.');
+        }
       } else {
         alert('⚠️ Lengkapi semua input terlebih dahulu.');
       }
-    });
+    }
 
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      if (confirm('Yakin hapus semua data dan hasil?')) {
-        clearStorage();
-        alert('🗑️ Semua data telah dihapus.');
+    async function clearFirebase() {
+      if (confirm('Yakin hapus data Fitur2 dari Firebase?')) {
+        try {
+          await remove(ref(window.db, 'fitur2'));
+          // Bersihkan form & hasil
+          document.getElementById('currResult').value = '';
+          document.getElementById('tanggalSebelum').value = '';
+          document.getElementById('tanggalSekarang').value = '';
+          document.getElementById('result4DLalu').value = '';
+          document.getElementById('resultsContainer').innerHTML = '';
+          document.getElementById('error').style.display = 'none';
+          console.log('🗑️ Data Fitur2 dihapus dari Firebase');
+        } catch (e) {
+          console.error('❌ Gagal hapus:', e);
+          alert('Gagal menghapus data.');
+        }
       }
-    });
+    }
+
+    // ─── REAL-TIME LISTENER ─────────────────────────────────────────────
+    function startFirebaseListener() {
+      const dbRef = ref(window.db, 'fitur2');
+      onValue(dbRef, (snapshot) => {
+        const data = snapshot.val();
+        const errorEl = document.getElementById('error');
+        errorEl.style.display = 'none';
+
+        if (data) {
+          // Isi form
+          document.getElementById('currResult').value = data.currResult || '';
+          document.getElementById('tanggalSebelum').value = data.tanggalSebelum || '';
+          document.getElementById('tanggalSekarang').value = data.tanggalSekarang || '';
+          document.getElementById('result4DLalu').value = data.result4DLalu || '';
+
+          // Coba generate jika semua lengkap
+          const { currResult, tanggalSebelum, tanggalSekarang, result4DLalu } = data;
+          if (currResult && tanggalSebelum && tanggalSekarang && result4DLalu) {
+            if (/^\d{4}$/.test(currResult) && /^\d+$/.test(tanggalSebelum) && /^\d+$/.test(tanggalSekarang) && /^\d{4}$/.test(result4DLalu)) {
+              try {
+                const tglSebNum = parseInt(tanggalSebelum, 10);
+                const tglSkrNum = parseInt(tanggalSekarang, 10);
+                const resultLaluNum = parseInt(result4DLalu, 10);
+                if (tglSebNum >= 1 && tglSebNum <= 31 && tglSkrNum >= 1 && tglSkrNum <= 31) {
+                  const { freqMap, notCaught } = calculateAll(currResult, tglSebNum, tglSkrNum, resultLaluNum);
+                  displayResults(freqMap, notCaught);
+                }
+              } catch (e) {
+                console.warn('Data valid tapi gagal generate:', e);
+              }
+            }
+          }
+        } else {
+          // Data kosong → bersihkan tampilan
+          document.getElementById('resultsContainer').innerHTML = '';
+        }
+      }, (error) => {
+        console.error('Firebase listener error:', error);
+        document.getElementById('error').textContent = 'Gagal terhubung ke Firebase.';
+        document.getElementById('error').style.display = 'block';
+      });
+    }
+
+    // ─── EVENT HANDLERS ──────────────────────────────────────────────────
+    document.getElementById('saveBtn').addEventListener('click', saveToFirebase);
+
+    document.getElementById('clearBtn').addEventListener('click', clearFirebase);
 
     document.getElementById('generateBtn').addEventListener('click', () => {
       const currResult = document.getElementById('currResult').value.trim();
@@ -671,7 +700,7 @@
       try {
         const { freqMap, notCaught } = calculateAll(currResult, tglSebNum, tglSkrNum, resultLaluNum);
         displayResults(freqMap, notCaught);
-        saveToStorage(); // Simpan otomatis setelah generate
+        saveToFirebase(); // Simpan ke Firebase setelah generate
       } catch (e) {
         errorEl.textContent = 'Terjadi kesalahan saat memproses.';
         errorEl.style.display = 'block';
@@ -683,8 +712,16 @@
       if (e.key === 'Enter') document.getElementById('generateBtn').click();
     });
 
-    // ─── MUAT SAAT HALAMAN DIBUKA ────────────────────────────────────────
-    window.addEventListener('DOMContentLoaded', loadFromStorage);
+    // ─── INISIALISASI ────────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      // Tunggu Firebase siap
+      const checkFirebase = setInterval(() => {
+        if (window.db) {
+          clearInterval(checkFirebase);
+          startFirebaseListener();
+        }
+      }, 100);
+    });
   </script>
 </body>
 </html>
