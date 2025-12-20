@@ -94,16 +94,17 @@
     }
   </style>
 
-  <!-- 🔥 Firebase SDK (modular) -->
+  <!-- 🔥 Firebase SDK (modular) - DIPERBAIKI -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, set, get, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    const firebaseConfig ={
+
+    const firebaseConfig = {
       apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
       authDomain: "nomoromosse.firebaseapp.com",
       databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "nomoromosse",
-      storageBucket: "nomoromosse.firebasestorage.app",
+      storageBucket: "nomoromosse.appspot.com",
       messagingSenderId: "985183830784",
       appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
     };
@@ -214,13 +215,12 @@
       const defaultVal = fullWeakMap[current2D];
       const currentVal = savedData[current2D] || defaultVal;
 
-      // Simpan hanya jika berbeda dari default (opsional, tapi efisien)
       try {
         await set(ref(window.db, `fitur9/${current2D}`), currentVal);
         alert("Data tersimpan ke cloud.");
       } catch (e) {
-        console.error(e);
-        alert("Gagal menyimpan ke cloud.");
+        console.error("Firebase save error:", e);
+        alert("Gagal menyimpan ke cloud. Periksa koneksi atau konfigurasi Firebase.");
       }
     }
 
@@ -309,7 +309,6 @@
       onValue(window.fitur9Ref, (snapshot) => {
         savedData = snapshot.val() || {};
         renderSavedList();
-        // Jika ada current2D, refresh tampilannya
         if (current2D && document.getElementById('resultBox').style.display !== 'none') {
           const [d1, d2] = savedData[current2D] || fullWeakMap[current2D];
           document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
@@ -329,7 +328,6 @@
 
     // === INISIALISASI ===
     document.addEventListener('DOMContentLoaded', () => {
-      // Tunggu Firebase siap
       const check = setInterval(() => {
         if (window.db) {
           clearInterval(check);
@@ -344,4 +342,3 @@
   </script>
 </body>
 </html>
-
