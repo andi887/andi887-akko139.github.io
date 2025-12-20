@@ -93,6 +93,26 @@
       color: #2c3e50;
     }
   </style>
+
+  <!-- 🔥 Firebase SDK (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
+      authDomain: "nomoromosse.firebaseapp.com",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nomoromosse",
+      storageBucket: "nomoromosse.firebasestorage.app",
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window.db = getDatabase(app);
+    window.fitur9Ref = ref(window.db, 'fitur9');
+  </script>
 </head>
 <body>
   <div class="container">
@@ -115,7 +135,7 @@
 
     <div class="saved-list" id="savedList">
       <h3>Data Tersimpan</h3>
-      <!-- Daftar akan diisi oleh JS -->
+      <p><em>Memuat data dari cloud...</em></p>
     </div>
 
     <div style="text-align: center; margin-top: 20px;">
@@ -161,6 +181,7 @@
 
     const fullWeakMap = generateFullWeakMap();
     let current2D = null;
+    let savedData = {}; // Menyimpan data dari Firebase
 
     // === TAMPILKAN HASIL ===
     function generateResult() {
@@ -175,32 +196,37 @@
         return;
       }
 
-      const [d1, d2] = fullWeakMap[key];
+      // Gunakan override dari Firebase jika ada, else gunakan default
+      const [d1, d2] = savedData[key] || fullWeakMap[key];
       current2D = key;
 
       document.getElementById('show2D').textContent = key;
       document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
       document.getElementById('resultBox').style.display = 'block';
-
-      // Fokus ulang ke input untuk kenyamanan
       document.getElementById('input2D').value = key;
     }
 
-    // === SIMPAN ===
-    function saveEntry() {
+    // === SIMPAN KE FIREBASE ===
+    async function saveEntry() {
       if (!current2D) {
         alert("Tidak ada data untuk disimpan.");
         return;
       }
-      const data = JSON.parse(localStorage.getItem('dasar_saved') || '{}');
-      data[current2D] = fullWeakMap[current2D];
-      localStorage.setItem('dasar_saved', JSON.stringify(data));
-      loadSavedList();
-      alert("Data tersimpan.");
+      const defaultVal = fullWeakMap[current2D];
+      const currentVal = savedData[current2D] || defaultVal;
+
+      // Simpan hanya jika berbeda dari default (opsional, tapi efisien)
+      try {
+        await set(ref(window.db, `fitur9/${current2D}`), currentVal);
+        alert("Data tersimpan ke cloud.");
+      } catch (e) {
+        console.error(e);
+        alert("Gagal menyimpan ke cloud.");
+      }
     }
 
     // === EDIT ===
-    function editEntry() {
+    async function editEntry() {
       if (!current2D) {
         alert("Tidak ada data aktif.");
         return;
@@ -211,12 +237,13 @@
         if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
           const [d1, d2] = parts.map(Number);
           if (d1 >= 1 && d1 <= 9 && d2 >= 1 && d2 <= 9 && d1 !== d2) {
-            const data = JSON.parse(localStorage.getItem('dasar_saved') || '{}');
-            data[current2D] = [d1, d2];
-            localStorage.setItem('dasar_saved', JSON.stringify(data));
-            document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
-            loadSavedList();
-            alert("Data diperbarui.");
+            try {
+              await set(ref(window.db, `fitur9/${current2D}`), [d1, d2]);
+              alert("Data diperbarui di cloud.");
+            } catch (e) {
+              console.error(e);
+              alert("Gagal memperbarui.");
+            }
           } else {
             alert("Nilai harus angka 1–9 dan berbeda.");
           }
@@ -226,33 +253,46 @@
       }
     }
 
-    // === HAPUS ===
-    function deleteEntry() {
+    // === HAPUS DARI FIREBASE ===
+    async function deleteEntry() {
       if (!current2D) {
         alert("Tidak ada data aktif.");
         return;
       }
-      if (confirm(`Hapus data untuk ${current2D}?`)) {
-        const data = JSON.parse(localStorage.getItem('dasar_saved') || '{}');
-        delete data[current2D];
-        localStorage.setItem('dasar_saved', JSON.stringify(data));
-        document.getElementById('resultBox').style.display = 'none';
-        current2D = null;
-        loadSavedList();
-        alert("Data dihapus.");
+      if (confirm(`Hapus data untuk ${current2D} dari cloud?`)) {
+        try {
+          await remove(ref(window.db, `fitur9/${current2D}`));
+          document.getElementById('resultBox').style.display = 'none';
+          current2D = null;
+          alert("Data dihapus dari cloud.");
+        } catch (e) {
+          console.error(e);
+          alert("Gagal menghapus.");
+        }
       }
     }
 
-    // === MUAT DAFTAR TERSIMPAN ===
-    function loadSavedList() {
-      const data = JSON.parse(localStorage.getItem('dasar_saved') || '{}');
+    // === PAKAI DATA TERSIMPAN ===
+    function useSaved(key) {
+      current2D = key;
+      const [d1, d2] = savedData[key] || fullWeakMap[key];
+      document.getElementById('show2D').textContent = key;
+      document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
+      document.getElementById('resultBox').style.display = 'block';
+      document.getElementById('input2D').value = key;
+    }
+
+    // === TAMPILKAN DAFTAR TERSIMPAN ===
+    function renderSavedList() {
       const container = document.getElementById('savedList');
+      const keys = Object.keys(savedData).sort();
       let html = '<h3>Data Tersimpan</h3>';
-      if (Object.keys(data).length === 0) {
-        html += '<p><em>Tidak ada data tersimpan.</em></p>';
+      if (keys.length === 0) {
+        html += '<p><em>Tidak ada data tersimpan di cloud.</em></p>';
       } else {
         html += '<div>';
-        Object.entries(data).forEach(([key, [d1, d2]]) => {
+        keys.forEach(key => {
+          const [d1, d2] = savedData[key];
           html += `
             <div class="saved-item">
               <span><strong>${key}</strong>: ${d1} & ${d2}</span>
@@ -265,19 +305,39 @@
       container.innerHTML = html;
     }
 
-    // === PAKAI DATA TERSIMPAN ===
-    function useSaved(key) {
-      current2D = key;
-      const [d1, d2] = JSON.parse(localStorage.getItem('dasar_saved'))[key];
-      document.getElementById('show2D').textContent = key;
-      document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
-      document.getElementById('resultBox').style.display = 'block';
-      document.getElementById('input2D').value = key;
+    // === REAL-TIME FIREBASE LISTENER ===
+    function startFirebaseListener() {
+      onValue(window.fitur9Ref, (snapshot) => {
+        savedData = snapshot.val() || {};
+        renderSavedList();
+        // Jika ada current2D, refresh tampilannya
+        if (current2D && document.getElementById('resultBox').style.display !== 'none') {
+          const [d1, d2] = savedData[current2D] || fullWeakMap[current2D];
+          document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
+        }
+      }, (error) => {
+        console.error("Firebase error:", error);
+        document.getElementById('savedList').innerHTML = '<h3>Data Tersimpan</h3><p>Gagal memuat dari cloud.</p>';
+      });
     }
+
+    // === EKSPOR FUNGSI GLOBAL ===
+    window.generateResult = generateResult;
+    window.saveEntry = saveEntry;
+    window.editEntry = editEntry;
+    window.deleteEntry = deleteEntry;
+    window.useSaved = useSaved;
 
     // === INISIALISASI ===
     document.addEventListener('DOMContentLoaded', () => {
-      loadSavedList();
+      // Tunggu Firebase siap
+      const check = setInterval(() => {
+        if (window.db) {
+          clearInterval(check);
+          startFirebaseListener();
+        }
+      }, 100);
+
       document.getElementById('input2D').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') generateResult();
       });
