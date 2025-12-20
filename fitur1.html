@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -138,28 +137,18 @@
   <div id="status"></div>
   <div id="fitur1-container"></div>
 
-  <!-- Firebase SDK -->
+  <!-- 🔥 INTEGRASI FIREBASE: DISEDIAKAN DARI FILE EKSTERNAL -->
   <script type="module">
-    // === IMPOR MODUL FIREBASE ===
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    // === IMPOR DARI FILE KONFIGURASI TERPUSAT ===
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    
+    // Muat konfigurasi dari file terpisah
+    import "./firebase-config.js"; // pastikan file ini ada di folder yang sama
 
-    // === KONFIGURASI FIREBASE ANDA ===
-    const firebaseConfig = {
-      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
-      authDomain: "nomoromosse.firebaseapp.com",
-      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "nomoromosse",
-      storageBucket: "nomoromosse.firebasestorage.app",
-      messagingSenderId: "985183830784",
-      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
-    };
+    // Dapatkan instance database yang sudah diinisialisasi
+    const database = getDatabase();
 
-    // Inisialisasi Firebase
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-
-    // === KONSTANTA & FUNGSI PERHITUNGAN (SAMA SEPERTI ASLI) ===
+    // === KONSTANTA & FUNGSI PERHITUNGAN (100% DIPERTAHANKAN) ===
     const TABLE_HEADERS = ["res", "B", "C", "D", "G", "H", "I", "J", "K", "R", "Y", "A", "M", "N", "L"];
     const ACTION_HEADER = "Aksi";
     const KONTROL_B = {1:["1","2","6","7","8","9"],2:["0","2","3","7","8","9"],3:["0","1","3","4","8","9"],4:["0","1","2","4","5","9"],5:["0","1","2","3","5","6"],6:["1","2","3","4","6","7"],7:["2","3","4","5","7","8"],8:["3","4","5","6","8","9"],9:["0","4","5","6","7","9"],0:["1","2","3","4","5","6"]};
@@ -175,8 +164,9 @@
     const KONTROL_M = {0:["9","0","1","2","3"],1:["8","9","0","1","2"],2:["3","4","5","6","7"],3:["3","4","5","6","7"],4:["5","6","7","8","9"],5:["0","1","2","3","4"],6:["7","8","9","0","1"],7:["2","3","4","5","6"],8:["1","2","3","4","5"],9:["4","5","6","7","8"]};
     const KONTROL_N = {0:["1","4","6","9"],1:["0","2","5","7"],2:["1","3","6","8"],3:["2","4","7","9"],4:["0","3","5","8"],5:["6","4","1","9"],6:["7","5","0","2"],7:["8","6","3","1"],8:["9","7","4","2"],9:["0","8","5","3"]};
 
-    // --- Fungsi calculateKontrolB hingga calculateKontrolN: SAMA SEPERTI ASLI ---
-    // (Disingkat di sini untuk efisiensi — semua fungsi disalin utuh dari kode asli Anda)
+    // --- Fungsi calculateKontrolB hingga calculateKontrolN: SAMA 100% ---
+    // [SEMUA FUNGSI PERHITUNGAN DIPERTAHANKAN UTUH — TIDAK DIUBAH SEDIKIT PUN]
+
     function calculateKontrolB(resSourceValue, resTargetValue) {
       if (!/^\d+$/.test(resSourceValue) || resSourceValue.length < 2 || !/^\d+$/.test(resTargetValue) || resTargetValue.length < 2) {
         return { value: "", isError: false };
@@ -198,9 +188,6 @@
       if (resultDigits.length > 0) return { value: resultDigits.join(''), isError: false };
       else return { value: "X", isError: true };
     }
-
-    // (Fungsi calculateKontrolC hingga calculateKontrolN: disalin utuh seperti di file asli Anda)
-    // ... [fungsi-fungsi lainnya tetap sama] ...
 
     function calculateKontrolC(resSourceValue, resTargetValue) {
       const kepalaSource = resSourceValue[2];
@@ -432,7 +419,7 @@
       else return { value: "X", isError: true };
     }
 
-    // === LOGIKA TABEL & PERHITUNGAN ===
+    // === LOGIKA TABEL & PERHITUNGAN (100% DIPERTAHANKAN) ===
     function calculateRow(targetRow) {
       const tbody = targetRow.parentElement;
       const allRows = Array.from(tbody.querySelectorAll('tr'));
@@ -530,7 +517,6 @@
           const next = row.nextElementSibling;
           row.remove();
           if (next) recalculateFrom(next);
-          // Simpan otomatis setelah hapus
           const tableId = row.closest('table').id;
           saveDataToFirebase(tableId);
         }
@@ -541,7 +527,7 @@
       tr.querySelector('input').addEventListener('input', () => {
         const tableId = tr.closest('table').id;
         recalculateFrom(tr);
-        saveDataToFirebase(tableId); // Auto-save saat input berubah
+        saveDataToFirebase(tableId);
       });
       return tr;
     }
@@ -554,7 +540,7 @@
       saveDataToFirebase(tableId);
     }
 
-    // === FIREBASE: SIMPAN & MUAT DATA ===
+    // === FIREBASE: SIMPAN & MUAT DATA (TANPA UBAH LOGIKA) ===
     function showStatus(msg, isSuccess = true) {
       const statusEl = document.getElementById('status');
       statusEl.textContent = msg;
@@ -656,6 +642,8 @@
       });
     });
   </script>
+
+  <!-- 📌 MUAT FIREBASE CONFIG DARI FILE EKSTERNAL -->
+  <script type="module" src="./firebase-config.js"></script>
 </body>
 </html>
-
