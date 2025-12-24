@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -205,9 +206,9 @@
     // === KONFIGURASI ===
     const MARKETS = ["cambodia", "sidney", "china", "japan", "sgp", "taiwan", "hongkong"];
     let panelCount = 0;
-    const allPanels = new Map(); // market → { el, data }
+    const allPanels = new Map();
 
-    // === HELPER FUNGSI (TIDAK BERUBAH) ===
+    // === HELPER FUNGSI ===
     function hitungDasar2D_2digit(duaDigit) {
       const a = parseInt(duaDigit[0], 10);
       const b = parseInt(duaDigit[1], 10);
@@ -270,7 +271,6 @@
                    .filter(n => !isNaN(n) && n >= 1 && n <= 9);
     }
 
-    // 🔹 BARU: Parse 2D Lemah (Fitur G)
     function parse2DLemah(input) {
       if (!input.trim()) return new Set();
       const items = input.split('/').map(s => s.trim());
@@ -336,7 +336,7 @@
         }
       }
 
-      // 🔹 G. 2D Lemah
+      // G. 2D Lemah
       const duaDLemahSet = parse2DLemah(G_input);
 
       // A. Angka Kontrol
@@ -357,7 +357,7 @@
         if (jarakLemahSet.has(num)) count++;
         if (shioLemahSet.has(num)) count++;
         if (dasarLemahSet.has(num)) count++;
-        if (duaDLemahSet.has(num)) count++; // 🔹 G ditambahkan sebagai 1 hit
+        if (duaDLemahSet.has(num)) count++;
         for (const digitSet of versionDigitSets) {
           if (!digitSet.has(num[0]) && !digitSet.has(num[1])) count++;
         }
@@ -426,7 +426,6 @@
           <label>F. Dasar Lemah (pisah dengan / jika >1)</label>
           <input type="text" data-field="F" placeholder="Contoh: 2 atau 2/5/7">
         </div>
-        <!-- 🔹 FITUR G BARU -->
         <div class="form-group">
           <label>G. 2D Lemah (pisah dengan /)</label>
           <input type="text" data-field="G" placeholder="Contoh: 35/27/59">
@@ -444,23 +443,17 @@
       const marketSelect = el.querySelector('.market-select');
       marketSelect.onchange = () => {
         const newMarket = marketSelect.value;
-        // Update map
         const oldKey = [...allPanels.keys()].find(k => allPanels.get(k).el.id === panelId);
         if (oldKey && oldKey !== newMarket) {
           const data = allPanels.get(oldKey);
           allPanels.delete(oldKey);
           allPanels.set(newMarket, data);
-          // Load dari Firebase pasar baru (opsional)
           loadFromFirebase(newMarket, panelId);
         }
       };
 
       document.getElementById('panels-container').appendChild(el);
-
-      // Simpan ke map (gunakan market sebagai kunci awal)
       allPanels.set(market, { el, panelId });
-
-      // Load data dari Firebase untuk market ini
       loadFromFirebase(market, panelId);
     }
 
@@ -476,10 +469,10 @@
             const input = document.querySelector(`#${panelId} [data-field="${f}"]`);
             if (input) input.value = data[f] || '';
           });
-          // Auto-generate jika data ada
           setTimeout(() => {
             const inputs = getInputs(panelId);
-            renderOutput(panelId, generateSaringan(inputs));
+            const result = generateSaringan(inputs);
+            renderOutput(panelId, result);
           }, 100);
         }
       } catch (e) {
@@ -504,6 +497,10 @@
       const { angkaBersih, angkaKhusus, outGroups } = result;
       let html = '';
 
+      // --- Bagian utama: Bersih, Khusus, Out 1x, Out 2x, dll. ---
+      const out1x = outGroups[1] || [];
+
+      // Angka Bersih
       angkaBersih.sort();
       const bersihText = angkaBersih.length ? angkaBersih.join('*') : '-';
       html += `<div class="section">
@@ -514,6 +511,7 @@
         </div>
       </div>`;
 
+      // Angka Khusus
       angkaKhusus.sort();
       const khususText = angkaKhusus.length ? angkaKhusus.join('*') : '-';
       html += `<div class="section">
@@ -524,8 +522,20 @@
         </div>
       </div>`;
 
-      const maxHit = Math.max(...Object.keys(outGroups).map(Number), 0);
-      for (let hit = 1; hit <= maxHit; hit++) {
+      // Out 1x
+      out1x.sort();
+      const out1xText = out1x.length ? out1x.join('*') : '-';
+      html += `<div class="section">
+        <div class="title">⚠️ Out 1x (${out1x.length} lines)</div>
+        <div class="result-box">
+          <div class="result">${out1xText}#</div>
+          <button class="copy-btn" data-copy="${out1xText}#" onclick="window.copyToClipboard(this.getAttribute('data-copy'))">Salin</button>
+        </div>
+      </div>`;
+
+      // Out 2x, 3x, ... (tetap ditampilkan)
+      const maxHit = Math.max(...Object.keys(outGroups).map(Number).filter(k => k !== 1), 0);
+      for (let hit = 2; hit <= maxHit; hit++) {
         const list = outGroups[hit] || [];
         if (list.length === 0) continue;
         list.sort();
@@ -539,10 +549,20 @@
         </div>`;
       }
 
+      // --- 🔹 BAGIAN BARU: RANGKUMAN ---
+      const summaryText = bersihText + '#' + '+' + out1xText + '#' + '+' + khususText + '#';
+      html += `<div class="section">
+        <div class="title">📋 Rangkuman</div>
+        <div class="result-box">
+          <div class="result">${summaryText}</div>
+          <button class="copy-btn" data-copy="${summaryText}" onclick="window.copyToClipboard(this.getAttribute('data-copy'))">Salin</button>
+        </div>
+      </div>`;
+
       document.getElementById(`output-${panelId}`).innerHTML = html;
     }
 
-    // === HANDLER GLOBAL (exposed to window) ===
+    // === HANDLER GLOBAL ===
     window.copyToClipboard = copyToClipboard;
 
     window.handleGenerate = (panelId) => {
@@ -561,7 +581,7 @@
         D: inputs.D_input,
         E: inputs.E_input,
         F: inputs.F_input,
-        G: inputs.G_input, // 🔹 SIMPAN G
+        G: inputs.G_input,
         timestamp: Date.now()
       };
 
@@ -604,13 +624,11 @@
         alert("Maksimal jumlah market telah tercapai.");
         return;
       }
-      // Pilih market berikutnya yang belum digunakan
       const used = new Set(allPanels.keys());
       const nextMarket = MARKETS.find(m => !used.has(m)) || 'cambodia';
       createPanel(nextMarket);
     };
 
-    // Buat panel pertama saat load
     document.addEventListener('DOMContentLoaded', () => {
       const init = () => {
         if (window.db) {
