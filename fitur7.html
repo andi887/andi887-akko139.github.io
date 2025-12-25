@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -41,13 +40,14 @@
       border-radius: 6px;
       font-size: 16px;
       cursor: pointer;
-      margin: 8px 0;
+      margin: 6px 0;
       font-weight: bold;
     }
+    #btn-cloning { background: #03A9F4; color: white; }
+    #btn-hapus-cloning { background: #FF9800; color: black; }
     #btn-simpan-semua { background: #4CAF50; color: white; }
     #btn-hapus-semua { background: #f44336; color: white; }
-    #btn-simpan-semua:hover { background: #45a049; }
-    #btn-hapus-semua:hover { background: #d32f2f; }
+    .btn:hover { opacity: 0.9; }
 
     .nota-box {
       background: white;
@@ -55,23 +55,32 @@
       padding: 12px;
       margin-bottom: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      position: relative;
     }
     .nota-box h2 {
       margin: 0 0 8px;
       font-size: 1.1em;
       color: #2c3e50;
     }
-    .nota-text {
+    select.market-select {
       width: 100%;
-      height: 120px;
-      padding: 10px;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.95em;
+    }
+    .nota-row {
+      width: 100%;
+      height: 80px;
+      padding: 8px;
       border: 1px solid #ccc;
       border-radius: 6px;
       font-family: Arial, monospace;
       font-size: 1em;
       resize: vertical;
       box-sizing: border-box;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     .box-actions {
       display: flex;
@@ -86,9 +95,11 @@
       cursor: pointer;
     }
     .btn-copy { background: #e0e0e0; }
+    .btn-edit { background: #9C27B0; color: white; }
+    .btn-delete { background: #f44336; color: white; }
     .btn-copy:hover { background: #d0d0d0; }
-    .btn-clear-box { background: #ffc107; color: #000; }
-    .btn-clear-box:hover { background: #e0a800; }
+    .btn-edit:hover { background: #7B1FA2; }
+    .btn-delete:hover { background: #d32f2f; }
 
     .status {
       text-align: center;
@@ -97,16 +108,11 @@
       margin: 8px 0;
       font-size: 0.95em;
     }
-    .info {
-      text-align: center;
-      color: #666;
-      font-size: 0.9em;
-      margin-top: 4px;
-    }
     .info-time {
       font-size: 0.85em;
       color: #555;
       margin-top: 4px;
+      text-align: right;
     }
   </style>
 </head>
@@ -117,16 +123,18 @@
     <a href="index.html">🔙 Kembali ke Beranda</a>
   </div>
 
-  <div id="nota-container"></div>
+  <button class="btn" id="btn-cloning">➕ Cloning</button>
+  <button class="btn" id="btn-hapus-cloning">🗑️ Hapus Semua Cloning</button>
+  <button class="btn" id="btn-simpan-semua">💾 Simpan ke Firebase</button>
+  <button class="btn" id="btn-hapus-semua">❌ Hapus Semua (Firebase)</button>
 
-  <button class="btn" id="btn-simpan-semua">💾 Simpan Semua Sekarang</button>
-  <button class="btn" id="btn-hapus-semua">🗑️ Hapus Semua Catatan</button>
+  <div id="nota-container"></div>
   <div class="status" id="status"></div>
 
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
@@ -141,34 +149,25 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // 🔹 Daftar Market (sesuaikan jika berbeda)
-    const MARKETS = ["SDY", "china", "HK", "taiwan", "japan"];
-    const AUTO_SAVE_DELAY = 2000; // 2 detik
-    let autoSaveTimers = {};
+    // 🔹 Daftar Market Lengkap
+    const MARKETS = ["Cambodia", "Sidney", "China", "Japan", "SGP", "Taiwan", "Hongkong"];
+    let instanceCounter = 0;
 
     // ─── Fungsi Umum ───────────────────────────────────────────────
-    function showMessage(msg) {
-      document.getElementById('status').textContent = msg;
-      setTimeout(() => document.getElementById('status').textContent = '', 3000);
+    function showMessage(msg, isError = false) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.style.color = isError ? '#e74c3c' : '#27ae60';
+      setTimeout(() => el.textContent = '', 3000);
     }
 
-    function formatTime(date) {
-      return new Intl.DateTimeFormat('id-ID', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }).format(date);
+    function getFormattedDate() {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      return `${day}/${month}`;
     }
 
-    function updateInfoTime(market, timeStr = '') {
-      const el = document.getElementById(`info-time-${market}`);
-      if (el) el.textContent = timeStr;
-    }
-
-    // ─── Salin Teks ───────────────────────────────────────────────
     async function copyToClipboard(text, btn) {
       if (!text.trim()) {
         const orig = btn.textContent;
@@ -182,136 +181,168 @@
         btn.textContent = '✅';
         setTimeout(() => btn.textContent = orig, 1200);
       } catch (err) {
-        console.warn('Gagal salin:', err);
         btn.textContent = '⚠️';
         setTimeout(() => btn.textContent = '📋 Salin', 1000);
       }
     }
 
-    // ─── Simpan per Market ke Firebase ─────────────────────────────
-    async function saveToFirebase(market, text) {
-      const marketRef = ref(db, `generator_2d/nota/${market}`);
-      try {
-        const now = new Date();
-        const payload = text.trim() === '' 
-          ? null 
-          : { text, updatedAt: now.getTime() };
-        
-        if (payload === null) {
-          await remove(marketRef);
-          updateInfoTime(market, "Dihapus.");
-          showMessage(`✅ ${market} dihapus.`);
-        } else {
-          await set(marketRef, payload);
-          updateInfoTime(market, "Terakhir: " + formatTime(now));
-          showMessage(`✅ ${market} tersimpan.`);
-        }
-      } catch (err) {
-        console.error(`Gagal simpan ${market}:`, err);
-        showMessage(`❌ Gagal simpan ${market}.`);
-      }
-    }
+    // ─── Buat Satu Instans Nota ────────────────────────────────────
+    function createNotaInstance(isOriginal = false) {
+      const id = 'nota-' + Date.now() + '-' + instanceCounter++;
+      const box = document.createElement('div');
+      box.className = 'nota-box';
+      box.id = id;
 
-    // ─── Auto-save per Market (Debounce) ───────────────────────────
-    function scheduleAutoSave(market) {
-      if (autoSaveTimers[market]) clearTimeout(autoSaveTimers[market]);
-      autoSaveTimers[market] = setTimeout(() => {
-        const text = document.getElementById(`nota-${market}`).value;
-        saveToFirebase(market, text);
-      }, AUTO_SAVE_DELAY);
-    }
-
-    // ─── Muat Catatan per Market ───────────────────────────────────
-    function loadNotaForMarket(market) {
-      const marketRef = ref(db, `generator_2d/nota/${market}`);
-      onValue(marketRef, (snapshot) => {
-        const data = snapshot.val();
-        const textarea = document.getElementById(`nota-${market}`);
-        if (data && data.text !== undefined) {
-          textarea.value = data.text;
-          if (data.updatedAt) {
-            updateInfoTime(market, "Terakhir: " + formatTime(new Date(data.updatedAt)));
-          }
-        } else {
-          textarea.value = '';
-          updateInfoTime(market, "Belum ada catatan.");
-        }
-      }, (error) => {
-        console.error(`Gagal muat ${market}:`, error);
+      const marketSelect = document.createElement('select');
+      marketSelect.className = 'market-select';
+      MARKETS.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        marketSelect.appendChild(opt);
       });
+
+      const row1 = document.createElement('textarea');
+      row1.className = 'nota-row';
+      row1.placeholder = 'Baris 1: Angka/hasil utama...';
+
+      const row2 = document.createElement('textarea');
+      row2.className = 'nota-row';
+      row2.placeholder = 'Baris 2: Keterangan tambahan...';
+
+      const actions = document.createElement('div');
+      actions.className = 'box-actions';
+
+      const btnCopy = document.createElement('button');
+      btnCopy.className = 'box-btn btn-copy';
+      btnCopy.textContent = '📋 Salin';
+      btnCopy.onclick = () => {
+        const text = `${row1.value}\n${row2.value}`.trim();
+        copyToClipboard(text, btnCopy);
+      };
+
+      const btnEdit = document.createElement('button');
+      btnEdit.className = 'box-btn btn-edit';
+      btnEdit.textContent = '✏️ Edit';
+      btnEdit.onclick = () => {
+        row1.readOnly = !row1.readOnly;
+        row2.readOnly = !row2.readOnly;
+        btnEdit.textContent = row1.readOnly ? '✏️ Edit' : '🔒 Kunci';
+      };
+      // Default editable
+      row1.readOnly = false;
+      row2.readOnly = false;
+
+      const btnDelete = document.createElement('button');
+      btnDelete.className = 'box-btn btn-delete';
+      btnDelete.textContent = '🗑️ Hapus';
+      btnDelete.onclick = () => {
+        if (isOriginal) {
+          showMessage('⚠️ Tidak bisa hapus instans utama.', true);
+          return;
+        }
+        if (confirm('Hapus instans ini?')) {
+          box.remove();
+        }
+      };
+
+      actions.appendChild(btnCopy);
+      actions.appendChild(btnEdit);
+      actions.appendChild(btnDelete);
+
+      box.appendChild(marketSelect);
+      box.appendChild(row1);
+      box.appendChild(row2);
+      box.appendChild(actions);
+
+      if (isOriginal) {
+        btnDelete.style.display = 'none'; // Sembunyikan hapus di instans pertama
+      }
+
+      return box;
     }
 
-    // ─── Hapus per Market ──────────────────────────────────────────
-    function clearNota(market) {
-      document.getElementById(`nota-${market}`).value = '';
-      saveToFirebase(market, ''); // kirim kosong → hapus di Firebase
+    // ─── Cloning ───────────────────────────────────────────────────
+    function cloneNota() {
+      const container = document.getElementById('nota-container');
+      const clone = createNotaInstance(false);
+      container.appendChild(clone);
+      showMessage('✅ Instans baru ditambahkan.');
     }
 
-    // ─── Hapus Semua ───────────────────────────────────────────────
-    function clearAll() {
-      if (confirm("Yakin hapus semua catatan? Tindakan ini tidak bisa dibatalkan.")) {
-        MARKETS.forEach(market => {
-          document.getElementById(`nota-${market}`).value = '';
-          saveToFirebase(market, '');
+    function removeAllClones() {
+      const container = document.getElementById('nota-container');
+      const children = container.children;
+      // Biarkan hanya anak pertama (instans asli)
+      while (children.length > 1) {
+        container.removeChild(children[1]);
+      }
+      showMessage('🧹 Semua cloning dihapus.');
+    }
+
+    // ─── Simpan ke Firebase ────────────────────────────────────────
+    async function saveAllToFirebase() {
+      const container = document.getElementById('nota-container');
+      const entries = [];
+      const now = getFormattedDate();
+
+      for (let box of container.children) {
+        const select = box.querySelector('.market-select');
+        const row1 = box.querySelector('.nota-row:nth-of-type(1)');
+        const row2 = box.querySelector('.nota-row:nth-of-type(2)');
+
+        if (!select || !row1 || !row2) continue;
+
+        entries.push({
+          market: select.value,
+          baris1: row1.value.trim(),
+          baris2: row2.value.trim(),
+          date: now
         });
       }
+
+      if (entries.length === 0) {
+        showMessage('⚠️ Tidak ada data untuk disimpan.', true);
+        return;
+      }
+
+      const saveId = 'nota-' + Date.now();
+      const saveRef = ref(db, `generator_2d/nota/${saveId}`);
+      try {
+        await set(saveRef, { entries, savedAt: Date.now() });
+        showMessage('✅ Semua catatan tersimpan ke Firebase.');
+      } catch (err) {
+        console.error('Firebase save error:', err);
+        showMessage('❌ Gagal simpan ke Firebase.', true);
+      }
     }
 
-    // ─── Simpan Semua Manual ───────────────────────────────────────
-    function saveAllManually() {
-      MARKETS.forEach(market => {
-        const text = document.getElementById(`nota-${market}`).value;
-        saveToFirebase(market, text);
-      });
-      showMessage("✅ Semua catatan disimpan.");
-    }
-
-    // ─── Bangun UI 5 Kotak ─────────────────────────────────────────
-    function buildUI() {
-      const container = document.getElementById('nota-container');
-      container.innerHTML = '';
-
-      MARKETS.forEach(market => {
-        const box = document.createElement('div');
-        box.className = 'nota-box';
-        box.innerHTML = `
-          <h2>${market}</h2>
-          <textarea id="nota-${market}" class="nota-text" placeholder="Catatan untuk ${market}..."></textarea>
-          <div class="info-time" id="info-time-${market}">Memuat...</div>
-          <div class="box-actions">
-            <button class="box-btn btn-copy" onclick="window.copyHandler('${market}')">📋 Salin</button>
-            <button class="box-btn btn-clear-box" onclick="window.clearHandler('${market}')">🗑️ Hapus</button>
-          </div>
-        `;
-        container.appendChild(box);
-      });
+    // ─── Hapus Semua di Firebase ───────────────────────────────────
+    async function removeAllFromFirebase() {
+      if (!confirm('Yakin hapus SEMUA data nota di Firebase?')) return;
+      try {
+        await remove(ref(db, 'generator_2d/nota'));
+        showMessage('🗑️ Semua data Firebase dihapus.');
+      } catch (err) {
+        console.error('Firebase remove error:', err);
+        showMessage('❌ Gagal menghapus data Firebase.', true);
+      }
     }
 
     // ─── Inisialisasi ──────────────────────────────────────────────
-    buildUI();
+    function init() {
+      const container = document.getElementById('nota-container');
+      const firstInstance = createNotaInstance(true);
+      container.appendChild(firstInstance);
 
-    // Pasang global handlers untuk salin/hapus
-    window.copyHandler = (market) => {
-      const text = document.getElementById(`nota-${market}`).value;
-      const btn = event.target;
-      copyToClipboard(text, btn);
-    };
+      // Event Listeners
+      document.getElementById('btn-cloning').addEventListener('click', cloneNota);
+      document.getElementById('btn-hapus-cloning').addEventListener('click', removeAllClones);
+      document.getElementById('btn-simpan-semua').addEventListener('click', saveAllToFirebase);
+      document.getElementById('btn-hapus-semua').addEventListener('click', removeAllFromFirebase);
+    }
 
-    window.clearHandler = (market) => {
-      if (confirm(`Hapus catatan untuk ${market}?`)) {
-        clearNota(market);
-      }
-    };
-
-    // Event listeners global
-    document.getElementById('btn-simpan-semua').addEventListener('click', saveAllManually);
-    document.getElementById('btn-hapus-semua').addEventListener('click', clearAll);
-
-    // Pasang auto-save dan muat data
-    MARKETS.forEach(market => {
-      loadNotaForMarket(market);
-      document.getElementById(`nota-${market}`).addEventListener('input', () => scheduleAutoSave(market));
-    });
+    init();
   </script>
 </body>
 </html>
