@@ -16,10 +16,14 @@
     .container {
       max-width: 600px;
       margin: 0 auto;
+    }
+
+    .panel {
       background: white;
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       padding: 16px;
+      margin-bottom: 20px;
     }
 
     h1 {
@@ -29,7 +33,6 @@
       color: #333;
     }
 
-    /* 🔙 Kembali ke Beranda */
     .back-home {
       text-align: center;
       margin: 12px 0;
@@ -48,6 +51,41 @@
       background: #3367d6;
     }
 
+    .cloning-controls {
+      text-align: center;
+      margin: 12px 0;
+    }
+    .cloning-controls button {
+      padding: 10px 16px;
+      background: #673ab7;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .cloning-controls button:hover {
+      background: #512da8;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .panel-title {
+      font-weight: bold;
+      font-size: 1.1em;
+      color: #2c3e50;
+    }
+    .market-select {
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 0.95em;
+    }
+
     .action-buttons {
       display: flex;
       gap: 8px;
@@ -62,25 +100,16 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    .btn-save {
-      background: #34a853;
-      color: white;
-    }
-    .btn-save:hover {
-      background: #2d8f47;
-    }
-    .btn-clear {
-      background: #ea4335;
-      color: white;
-    }
-    .btn-clear:hover {
-      background: #d33426;
-    }
+    .btn-save { background: #34a853; color: white; }
+    .btn-save:hover { background: #2d8f47; }
+    .btn-clear { background: #ea4335; color: white; }
+    .btn-clear:hover { background: #d33426; }
+    .btn-delete-panel { background: #f57c00; color: white; }
+    .btn-delete-panel:hover { background: #e65100; }
 
     .input-group {
       margin: 12px 0;
     }
-
     label {
       display: block;
       font-weight: bold;
@@ -88,7 +117,6 @@
       color: #555;
       font-size: 0.95em;
     }
-
     input {
       width: 100%;
       padding: 12px;
@@ -98,7 +126,7 @@
       box-sizing: border-box;
     }
 
-    button#btn-hitung {
+    button.btn-hitung {
       width: 100%;
       padding: 14px;
       background: #673ab7;
@@ -110,8 +138,7 @@
       cursor: pointer;
       margin: 16px 0;
     }
-
-    button#btn-hitung:active {
+    button.btn-hitung:active {
       background: #512da8;
       transform: scale(0.99);
     }
@@ -122,18 +149,15 @@
       margin-top: 20px;
       font-size: 16px;
     }
-
     th, td {
       padding: 12px 8px;
       text-align: center;
       border: 1px solid #ddd;
     }
-
     th {
       background-color: #f8f9fa;
       color: #333;
     }
-
     .rumus-tag {
       color: #d32f2f;
       font-weight: bold;
@@ -141,13 +165,11 @@
     }
 
     @media (max-width: 480px) {
-      .container {
-        padding: 12px;
-      }
-      th, td {
-        padding: 10px 6px;
-        font-size: 15px;
-      }
+      .panel { padding: 12px; }
+      .panel-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .action-buttons { flex-direction: column; }
+      .action-buttons button { width: 100%; }
+      th, td { padding: 10px 6px; font-size: 15px; }
     }
   </style>
 </head>
@@ -155,53 +177,26 @@
   <div class="container">
     <h1>🔢 kamar</h1>
 
-    <!-- 🔙 Kembali ke Beranda -->
     <div class="back-home">
       <a href="index.html">🔙 Kembali ke Beranda</a>
     </div>
 
-    <div class="input-group">
-      <label for="tanggalSebelum">Tanggal Pemutaran Sebelumnya</label>
-      <input type="text" id="tanggalSebelum" placeholder="Contoh: 10" inputmode="numeric" />
+    <div class="cloning-controls">
+      <button id="btn-tambah-kamar">➕ Tambah Kamar</button>
     </div>
 
-    <div class="input-group">
-      <label for="tanggalSekarang">Tanggal Pemutaran Sekarang</label>
-      <input type="text" id="tanggalSekarang" placeholder="Contoh: 11" inputmode="numeric" />
+    <div id="panels-container">
+      <!-- Panel akan dibuat dinamis -->
     </div>
-
-    <div class="input-group">
-      <label for="result4DLalu">4D Result Sebelumnya</label>
-      <input type="text" id="result4DLalu" placeholder="Contoh: 4796" inputmode="numeric" maxlength="4" />
-    </div>
-
-    <div class="input-group">
-      <label for="result4D">4D Result Sekarang</label>
-      <input type="text" id="result4D" placeholder="Contoh: 7890" inputmode="numeric" maxlength="4" />
-    </div>
-
-    <button id="btn-hitung">Terapkan Semua Rumus</button>
-
-    <!-- Tombol Simpan & Hapus -->
-    <div class="action-buttons">
-      <button id="btn-simpan" class="btn-save">💾 Simpan</button>
-      <button id="btn-hapus" class="btn-clear">🗑️ Hapus</button>
-    </div>
-
-    <table id="kamar-table">
-      <thead>
-        <tr>
-          <th>Kamar</th>
-          <th>Rumus Lemah</th>
-        </tr>
-      </thead>
-      <tbody id="kamar-body">
-        <!-- Diisi otomatis -->
-      </tbody>
-    </table>
   </div>
 
   <script>
+    // === KONFIGURASI ===
+    const MARKETS = ["cambodia", "sidney", "china", "japan", "sgp", "taiwan", "hongkong"];
+    let panelCount = 0;
+    const activePanels = new Map(); // market → panelId
+
+    // === DATA SHIO (TIDAK BERUBAH) ===
     const shioAngka = {
       1: [1,13,25,37,49,61,73,85,97],
       2: [2,14,26,38,50,62,74,86,98],
@@ -217,16 +212,7 @@
       12: [12,24,36,48,60,72,84,96]
     };
 
-    function buatTabelKamar() {
-      const tbody = document.getElementById("kamar-body");
-      tbody.innerHTML = "";
-      for (let i = 1; i <= 12; i++) {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${i}</td><td id="rumus-${i}">—</td>`;
-        tbody.appendChild(row);
-      }
-    }
-
+    // === FUNGSI BANTU (TIDAK BERUBAH) ===
     function getIndex(angka) { return (angka + 5) % 10; }
     function angkaKeShio(n) { n = n % 12; return n === 0 ? 12 : n; }
 
@@ -236,6 +222,7 @@
       return total === 0 ? 9 : total;
     }
 
+    // === LOGIKA RUMUS (TIDAK BERUBAH) ===
     function hitungKamarLemah(tglSeb, tglSkr, empatDLalu, empatDSkr) {
       const kamarRumus = {};
       for (let i = 1; i <= 12; i++) kamarRumus[i] = new Set();
@@ -271,14 +258,12 @@
       kamarRumus[angkaKeShio(AS * 10 + EKOR)].add(13);
       kamarRumus[angkaKeShio(getIndex(AS_Lalu) * 10 + getIndex(AS))].add(14);
 
-      // 🔹 === TAMBAHAN: Rumus 15, 16, 17 (berdasarkan 6 digit) ===
-      // Bangun 6 digit dari gabungan 4D lalu + 4D sekarang → ambil 6 digit terakhir
+      // 🔹 Rumus 15, 16, 17
       let str4DLalu6 = empatDLalu.toString().padStart(4, '0');
       let str4DSkr6 = empatDSkr.toString().padStart(4, '0');
-      const combined8 = str4DLalu6 + str4DSkr6; // contoh: "47967890"
-      const result6 = combined8.slice(-6).padStart(6, '0'); // "967890"
+      const combined8 = str4DLalu6 + str4DSkr6;
+      const result6 = combined8.slice(-6).padStart(6, '0');
 
-      // Rumus 15: Jumlah semua digit + 9 → ambil 2 digit terakhir → cari kamar
       let sum15 = 0;
       for (const char of result6) sum15 += parseInt(char, 10);
       sum15 += 9;
@@ -286,95 +271,178 @@
       const angka15 = parseInt(target2D_15, 10);
       kamarRumus[angkaKeShio(angka15)].add(15);
 
-      // Rumus 16: Digit ke-1 (A) dan ke-3 (C) dari result6 → bentuk 2D → kamar
-      const ac2D = result6[0] + result6[2]; // string, misal: "97"
+      const ac2D = result6[0] + result6[2];
       const angka16 = parseInt(ac2D, 10);
       kamarRumus[angkaKeShio(angka16)].add(16);
 
-      // Rumus 17: Jumlah semua digit mod 12
       let sum17 = 0;
       for (const char of result6) sum17 += parseInt(char, 10);
       const mod17 = sum17 % 12;
       const shio17 = mod17 === 0 ? 12 : mod17;
       kamarRumus[shio17].add(17);
-      // 🔹 === AKHIR TAMBAHAN ===
 
       return kamarRumus;
     }
 
-    function tampilkanKamarLemah(kamarRumus) {
+    // === RENDER TABEL KOSONG ===
+    function buatTabelKamar(containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = `
+        <table>
+          <thead><tr><th>Kamar</th><th>Rumus Lemah</th></tr></thead>
+          <tbody id="kamar-body-${containerId}"></tbody>
+        </table>
+      `;
+      const tbody = document.getElementById(`kamar-body-${containerId}`);
       for (let i = 1; i <= 12; i++) {
-        const cell = document.getElementById(`rumus-${i}`);
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${i}</td><td id="rumus-${i}-${containerId}">—</td>`;
+        tbody.appendChild(row);
+      }
+    }
+
+    // === TAMPILKAN HASIL ===
+    function tampilkanKamarLemah(kamarRumus, containerId) {
+      for (let i = 1; i <= 12; i++) {
+        const cell = document.getElementById(`rumus-${i}-${containerId}`);
         const list = Array.from(kamarRumus[i]).sort((a, b) => a - b);
         cell.innerHTML = list.length === 0 ? "—" : `<span class="rumus-tag">${list.join(",")}</span>`;
       }
     }
 
-    // 🔹 LOCALSTORAGE
-    const STORAGE_KEY = 'kamar_data';
-
-    function simpanKeStorage() {
-      const data = {
-        tanggalSebelum: document.getElementById('tanggalSebelum').value.trim(),
-        tanggalSekarang: document.getElementById('tanggalSekarang').value.trim(),
-        result4DLalu: document.getElementById('result4DLalu').value.trim(),
-        result4D: document.getElementById('result4D').value.trim(),
-        hasil: {}
-      };
-
-      // Simpan hasil per kamar
-      for (let i = 1; i <= 12; i++) {
-        const cell = document.getElementById(`rumus-${i}`);
-        if (cell && cell.textContent !== "—") {
-          data.hasil[i] = cell.textContent;
-        }
-      }
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // === PENYIMPANAN PER MARKET ===
+    function getStorageKey(market) {
+      return `kamar_data_${market}`;
     }
 
-    function muatDariStorage() {
-      const saved = localStorage.getItem(STORAGE_KEY);
+    function simpanKeStorage(market, data) {
+      localStorage.setItem(getStorageKey(market), JSON.stringify(data));
+    }
+
+    function muatDariStorage(market) {
+      const saved = localStorage.getItem(getStorageKey(market));
       if (saved) {
         try {
-          const data = JSON.parse(saved);
-          document.getElementById('tanggalSebelum').value = data.tanggalSebelum || '';
-          document.getElementById('tanggalSekarang').value = data.tanggalSekarang || '';
-          document.getElementById('result4DLalu').value = data.result4DLalu || '';
-          document.getElementById('result4D').value = data.result4D || '';
-
-          if (data.hasil) {
-            // Tunggu tabel dibuat
-            setTimeout(() => {
-              for (let i = 1; i <= 12; i++) {
-                const cell = document.getElementById(`rumus-${i}`);
-                if (cell && data.hasil[i]) {
-                  cell.innerHTML = `<span class="rumus-tag">${data.hasil[i]}</span>`;
-                }
-              }
-            }, 50);
-          }
+          return JSON.parse(saved);
         } catch (e) {
-          console.error('Gagal memuat data kamar:', e);
+          console.error('Gagal parse data untuk market:', market, e);
+        }
+      }
+      return null;
+    }
+
+    // === BUAT PANEL BARU ===
+    function buatPanel(market = 'cambodia') {
+      panelCount++;
+      const panelId = `panel-${panelCount}`;
+      const panelEl = document.createElement('div');
+      panelEl.className = 'panel';
+      panelEl.id = panelId;
+
+      panelEl.innerHTML = `
+        <div class="panel-header">
+          <div class="panel-title">Kamar ${panelCount}</div>
+          <select class="market-select">
+            ${MARKETS.map(m => `<option value="${m}" ${m === market ? 'selected' : ''}>${m.charAt(0).toUpperCase() + m.slice(1)}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>Tanggal Pemutaran Sebelumnya</label>
+          <input type="text" data-field="tanggalSebelum" placeholder="Contoh: 10" inputmode="numeric" />
+        </div>
+        <div class="input-group">
+          <label>Tanggal Pemutaran Sekarang</label>
+          <input type="text" data-field="tanggalSekarang" placeholder="Contoh: 11" inputmode="numeric" />
+        </div>
+        <div class="input-group">
+          <label>4D Result Sebelumnya</label>
+          <input type="text" data-field="result4DLalu" placeholder="Contoh: 4796" inputmode="numeric" maxlength="4" />
+        </div>
+        <div class="input-group">
+          <label>4D Result Sekarang</label>
+          <input type="text" data-field="result4D" placeholder="Contoh: 7890" inputmode="numeric" maxlength="4" />
+        </div>
+
+        <button class="btn-hitung" onclick="window.handleHitung('${panelId}')">Terapkan Semua Rumus</button>
+
+        <div class="action-buttons">
+          <button class="btn-save" onclick="window.handleSimpan('${panelId}')">💾 Simpan</button>
+          <button class="btn-clear" onclick="window.handleHapusData('${panelId}')">🗑️ Hapus Data</button>
+          <button class="btn-delete-panel" onclick="window.handleHapusPanel('${panelId}')">❌ Hapus Panel</button>
+        </div>
+
+        <div id="tabel-kamar-${panelId}"></div>
+      `;
+
+      document.getElementById('panels-container').appendChild(panelEl);
+      buatTabelKamar(`tabel-kamar-${panelId}`);
+
+      // Pasang event ganti market
+      const select = panelEl.querySelector('.market-select');
+      select.onchange = () => {
+        const oldMarket = [...activePanels.entries()].find(([m, id]) => id === panelId)?.[0];
+        const newMarket = select.value;
+        if (oldMarket && oldMarket !== newMarket) {
+          activePanels.delete(oldMarket);
+          activePanels.set(newMarket, panelId);
+          // Muat data market baru
+          const data = muatDariStorage(newMarket);
+          if (data) {
+            ['tanggalSebelum','tanggalSekarang','result4DLalu','result4D'].forEach(f => {
+              const input = panelEl.querySelector(`[data-field="${f}"]`);
+              if (input) input.value = data[f] || '';
+            });
+            if (data.hasil) {
+              setTimeout(() => {
+                for (let i = 1; i <= 12; i++) {
+                  const cell = document.getElementById(`rumus-${i}-${panelId}`);
+                  if (cell && data.hasil[i]) {
+                    cell.innerHTML = `<span class="rumus-tag">${data.hasil[i]}</span>`;
+                  }
+                }
+              }, 50);
+            }
+          } else {
+            // Kosongkan jika tidak ada data
+            ['tanggalSebelum','tanggalSekarang','result4DLalu','result4D'].forEach(f => {
+              const input = panelEl.querySelector(`[data-field="${f}"]`);
+              if (input) input.value = '';
+            });
+            buatTabelKamar(`tabel-kamar-${panelId}`);
+          }
+        }
+      };
+
+      activePanels.set(market, panelId);
+
+      // Muat data awal
+      const data = muatDariStorage(market);
+      if (data) {
+        ['tanggalSebelum','tanggalSekarang','result4DLalu','result4D'].forEach(f => {
+          const input = panelEl.querySelector(`[data-field="${f}"]`);
+          if (input) input.value = data[f] || '';
+        });
+        if (data.hasil) {
+          setTimeout(() => {
+            for (let i = 1; i <= 12; i++) {
+              const cell = document.getElementById(`rumus-${i}-${panelId}`);
+              if (cell && data.hasil[i]) {
+                cell.innerHTML = `<span class="rumus-tag">${data.hasil[i]}</span>`;
+              }
+            }
+          }, 50);
         }
       }
     }
 
-    function bersihkanSemua() {
-      document.getElementById('tanggalSebelum').value = '';
-      document.getElementById('tanggalSekarang').value = '';
-      document.getElementById('result4DLalu').value = '';
-      document.getElementById('result4D').value = '';
-      buatTabelKamar();
-      localStorage.removeItem(STORAGE_KEY);
-    }
-
-    // 🔹 EVENT HANDLERS
-    document.getElementById("btn-hitung").addEventListener("click", () => {
-      const seb = document.getElementById("tanggalSebelum").value.trim();
-      const skr = document.getElementById("tanggalSekarang").value.trim();
-      const laluStr = document.getElementById("result4DLalu").value.trim();
-      const skr4DStr = document.getElementById("result4D").value.trim();
+    // === HANDLER GLOBAL ===
+    window.handleHitung = (panelId) => {
+      const getVal = (f) => document.querySelector(`#${panelId} [data-field="${f}"]`).value.trim();
+      const seb = getVal('tanggalSebelum');
+      const skr = getVal('tanggalSekarang');
+      const laluStr = getVal('result4DLalu');
+      const skr4DStr = getVal('result4D');
 
       if (!seb || !skr || !laluStr || !skr4DStr) {
         alert("Harap isi semua kolom.");
@@ -390,42 +458,98 @@
         alert("Tanggal harus angka 1–31.");
         return;
       }
-
       if (isNaN(empatDLalu) || isNaN(empatDSkr) || empatDLalu < 0 || empatDLalu > 9999 || empatDSkr < 0 || empatDSkr > 9999) {
         alert("4D harus angka 0–9999.");
         return;
       }
 
       const hasil = hitungKamarLemah(tglSeb, tglSkr, empatDLalu, empatDSkr);
-      tampilkanKamarLemah(hasil);
-      simpanKeStorage(); // Simpan otomatis setelah hitung
-    });
+      tampilkanKamarLemah(hasil, panelId);
 
-    document.getElementById('btn-simpan').addEventListener('click', () => {
-      const seb = document.getElementById("tanggalSebelum").value.trim();
-      const skr = document.getElementById("tanggalSekarang").value.trim();
-      const lalu = document.getElementById("result4DLalu").value.trim();
-      const skr4D = document.getElementById("result4D").value.trim();
+      // Simpan otomatis
+      const market = document.querySelector(`#${panelId} .market-select`).value;
+      const data = {
+        tanggalSebelum: seb,
+        tanggalSekarang: skr,
+        result4DLalu: laluStr,
+        result4D: skr4DStr,
+        hasil: {}
+      };
+      for (let i = 1; i <= 12; i++) {
+        const cell = document.getElementById(`rumus-${i}-${panelId}`);
+        if (cell && cell.textContent !== "—") {
+          data.hasil[i] = cell.textContent;
+        }
+      }
+      simpanKeStorage(market, data);
+    };
+
+    window.handleSimpan = (panelId) => {
+      const seb = document.querySelector(`#${panelId} [data-field="tanggalSebelum"]`).value.trim();
+      const skr = document.querySelector(`#${panelId} [data-field="tanggalSekarang"]`).value.trim();
+      const lalu = document.querySelector(`#${panelId} [data-field="result4DLalu"]`).value.trim();
+      const skr4D = document.querySelector(`#${panelId} [data-field="result4D"]`).value.trim();
 
       if (!seb || !skr || !lalu || !skr4D) {
         alert("⚠️ Lengkapi semua input terlebih dahulu.");
         return;
       }
-      simpanKeStorage();
-      alert("✅ Data berhasil disimpan ke localStorage!");
-    });
 
-    document.getElementById('btn-hapus').addEventListener('click', () => {
-      if (confirm("Yakin hapus semua data?")) {
-        bersihkanSemua();
-        alert("🗑️ Semua data telah dihapus.");
+      const market = document.querySelector(`#${panelId} .market-select`).value;
+      const data = {
+        tanggalSebelum: seb,
+        tanggalSekarang: skr,
+        result4DLalu: lalu,
+        result4D: skr4D,
+        hasil: {}
+      };
+      for (let i = 1; i <= 12; i++) {
+        const cell = document.getElementById(`rumus-${i}-${panelId}`);
+        if (cell && cell.textContent !== "—") {
+          data.hasil[i] = cell.textContent;
+        }
       }
-    });
+      simpanKeStorage(market, data);
+      alert("✅ Data berhasil disimpan ke localStorage!");
+    };
 
-    // 🔹 MUAT SAAT DIBUKA
-    document.addEventListener("DOMContentLoaded", () => {
-      buatTabelKamar();
-      muatDariStorage();
+    window.handleHapusData = (panelId) => {
+      if (confirm("Yakin hapus data panel ini?")) {
+        const market = document.querySelector(`#${panelId} .market-select`).value;
+        localStorage.removeItem(getStorageKey(market));
+        ['tanggalSebelum','tanggalSekarang','result4DLalu','result4D'].forEach(f => {
+          const input = document.querySelector(`#${panelId} [data-field="${f}"]`);
+          if (input) input.value = '';
+        });
+        buatTabelKamar(`tabel-kamar-${panelId}`);
+        alert("🗑️ Data panel ini dihapus.");
+      }
+    };
+
+    window.handleHapusPanel = (panelId) => {
+      if (confirm("Yakin hapus seluruh panel ini?")) {
+        const market = document.querySelector(`#${panelId} .market-select`).value;
+        localStorage.removeItem(getStorageKey(market));
+        const el = document.getElementById(panelId);
+        if (el) el.remove();
+        activePanels.delete(market);
+      }
+    };
+
+    // === INIT ===
+    document.getElementById('btn-tambah-kamar').onclick = () => {
+      if (activePanels.size >= MARKETS.length) {
+        alert("Maksimal 7 market telah tercapai.");
+        return;
+      }
+      const used = new Set(activePanels.keys());
+      const nextMarket = MARKETS.find(m => !used.has(m)) || 'cambodia';
+      buatPanel(nextMarket);
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Buat panel pertama
+      buatPanel('cambodia');
     });
   </script>
 </body>
