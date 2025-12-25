@@ -208,7 +208,7 @@
         font-size: 14px;
       }
       input, .market-select {
-        font-size: 16px; /* Penting untuk mobile */
+        font-size: 16px;
       }
     }
   </style>
@@ -221,7 +221,6 @@
       <a href="index.html">🔙 Kembali ke Beranda</a>
     </div>
 
-    <!-- Tombol Global -->
     <div class="global-buttons">
       <button id="btn-clone" class="btn-clone">➕ +1 Kamar</button>
       <button id="btn-clear-clones" class="btn-clear-clones">🗑️ Hapus Cloning</button>
@@ -343,33 +342,6 @@
       return kamarRumus;
     }
 
-    function buatTabelKamar(container) {
-      const table = document.createElement('table');
-      table.innerHTML = `
-        <thead>
-          <tr><th>Kamar</th><th>Rumus Lemah</th></tr>
-        </thead>
-        <tbody id="kamar-body"></tbody>
-      `;
-      const tbody = table.querySelector('#kamar-body');
-      for (let i = 1; i <= 12; i++) {
-        const row = document.createElement("tr");
-        const rumusId = `rumus-${instanceCounter}-${i}`;
-        row.innerHTML = `<td>${i}</td><td id="${rumusId}">—</td>`;
-        tbody.appendChild(row);
-      }
-      container.appendChild(table);
-      return tbody;
-    }
-
-    function tampilkanKamarLemah(kamarRumus, tbody) {
-      for (let i = 1; i <= 12; i++) {
-        const cell = tbody.querySelector(`#rumus-${instanceCounter}-${i}`);
-        const list = Array.from(kamarRumus[i]).sort((a, b) => a - b);
-        cell.innerHTML = list.length === 0 ? "—" : `<span class="rumus-tag">${list.join(",")}</span>`;
-      }
-    }
-
     function showMessage(msg, isError = false) {
       const el = document.getElementById('status');
       el.textContent = msg;
@@ -384,12 +356,12 @@
       return `${day}/${month}`;
     }
 
-    // 🔹 BUAT SATU INSTANS
-    function createKamarInstance(isOriginal = false) {
-      const id = 'instance-' + Date.now() + '-' + instanceCounter++;
+    // 🔹 BUAT SATU INSTANS (DIPERBAIKI: gunakan instanceId konsisten)
+    function createKamarInstance(isOriginal = false, savedData = null) {
+      const currentId = instanceCounter++;
       const div = document.createElement('div');
       div.className = 'kamar-instance';
-      div.id = id;
+      div.dataset.instanceId = currentId; // 🔑 simpan ID unik
 
       // Dropdown market
       const marketSelect = document.createElement('select');
@@ -400,13 +372,18 @@
         opt.textContent = m;
         marketSelect.appendChild(opt);
       });
+      if (savedData && MARKETS.includes(savedData.market)) {
+        marketSelect.value = savedData.market;
+      }
 
-      // Input
+      div.appendChild(marketSelect);
+
+      // Input fields
       const inputs = [
-        { label: 'Tanggal Pemutaran Sebelumnya', placeholder: 'Contoh: 10', cls: 'tanggal-sebelum' },
-        { label: 'Tanggal Pemutaran Sekarang', placeholder: 'Contoh: 11', cls: 'tanggal-sekarang' },
-        { label: '4D Result Sebelumnya', placeholder: 'Contoh: 4796', cls: 'result4d-lalu' },
-        { label: '4D Result Sekarang', placeholder: 'Contoh: 7890', cls: 'result4d-sekarang' }
+        { label: 'Tanggal Pemutaran Sebelumnya', placeholder: 'Contoh: 10', cls: 'tanggal-sebelum', value: savedData?.tanggalSebelum || '' },
+        { label: 'Tanggal Pemutaran Sekarang', placeholder: 'Contoh: 11', cls: 'tanggal-sekarang', value: savedData?.tanggalSekarang || '' },
+        { label: '4D Result Sebelumnya', placeholder: 'Contoh: 4796', cls: 'result4d-lalu', value: savedData?.result4DLalu || '' },
+        { label: '4D Result Sekarang', placeholder: 'Contoh: 7890', cls: 'result4d-sekarang', value: savedData?.result4D || '' }
       ];
 
       inputs.forEach(inp => {
@@ -414,13 +391,24 @@
         group.className = 'input-group';
         group.innerHTML = `
           <label>${inp.label}</label>
-          <input type="text" class="${inp.cls}" placeholder="${inp.placeholder}" inputmode="numeric" />
+          <input type="text" class="${inp.cls}" placeholder="${inp.placeholder}" inputmode="numeric" value="${inp.value}" />
         `;
         div.appendChild(group);
       });
 
       // Tabel hasil
-      const tbody = buatTabelKamar(div);
+      const table = document.createElement('table');
+      table.innerHTML = `<thead><tr><th>Kamar</th><th>Rumus Lemah</th></tr></thead><tbody></tbody>`;
+      const tbody = table.querySelector('tbody');
+      for (let i = 1; i <= 12; i++) {
+        const row = document.createElement("tr");
+        const rumusId = `rumus-${currentId}-${i}`;
+        const cellText = (savedData && savedData.hasil && savedData.hasil[i]) ? 
+          `<span class="rumus-tag">${savedData.hasil[i]}</span>` : "—";
+        row.innerHTML = `<td>${i}</td><td id="${rumusId}">${cellText}</td>`;
+        tbody.appendChild(row);
+      }
+      div.appendChild(table);
 
       // Tombol per instans
       const btnGroup = document.createElement('div');
@@ -429,7 +417,9 @@
       const btnApply = document.createElement('button');
       btnApply.className = 'btn-apply';
       btnApply.textContent = 'Terapkan Rumus';
-      btnApply.onclick = () => terapkanRumusUntukInstans(div, tbody);
+      btnApply.onclick = () => {
+        terapkanRumusUntukInstans(div, currentId);
+      };
 
       const btnDelete = document.createElement('button');
       btnDelete.className = isOriginal ? 'btn-delete btn-delete-original' : 'btn-delete';
@@ -448,10 +438,10 @@
       btnGroup.appendChild(btnDelete);
       div.appendChild(btnGroup);
 
-      return { element: div, tbody, marketSelect };
+      return div;
     }
 
-    function terapkanRumusUntukInstans(instans, tbody) {
+    function terapkanRumusUntukInstans(instans, instanceId) {
       const seb = instans.querySelector('.tanggal-sebelum').value.trim();
       const skr = instans.querySelector('.tanggal-sekarang').value.trim();
       const laluStr = instans.querySelector('.result4d-lalu').value.trim();
@@ -477,7 +467,16 @@
       }
 
       const hasil = hitungKamarLemah(tglSeb, tglSkr, empatDLalu, empatDSkr);
-      tampilkanKamarLemah(hasil, tbody);
+      tampilkanKamarLemah(hasil, instanceId);
+    }
+
+    function tampilkanKamarLemah(kamarRumus, instanceId) {
+      for (let i = 1; i <= 12; i++) {
+        const cell = document.getElementById(`rumus-${instanceId}-${i}`);
+        if (!cell) continue;
+        const list = Array.from(kamarRumus[i]).sort((a, b) => a - b);
+        cell.innerHTML = list.length === 0 ? "—" : `<span class="rumus-tag">${list.join(",")}</span>`;
+      }
     }
 
     // 🔹 GLOBAL: Terapkan Semua
@@ -488,10 +487,8 @@
         return;
       }
       instances.forEach(inst => {
-        const tbody = inst.querySelector('tbody');
-        if (tbody) {
-          terapkanRumusUntukInstans(inst, tbody);
-        }
+        const instanceId = inst.dataset.instanceId;
+        terapkanRumusUntukInstans(inst, instanceId);
       });
       showMessage('✅ Semua rumus diterapkan.');
     }
@@ -502,7 +499,7 @@
       const original = container.querySelector('.kamar-instance');
       if (!original) return;
 
-      const { element: clone } = createKamarInstance(false);
+      const clone = createKamarInstance(false);
       container.appendChild(clone);
       showMessage('✅ Instans baru ditambahkan.');
     }
@@ -516,7 +513,7 @@
       showMessage('🧹 Semua cloning dihapus.');
     }
 
-    // 🔹 Firebase: Simpan Semua
+    // 🔹 Firebase: Simpan Semua (DIPERBAIKI: simpan hasil dengan benar)
     async function saveAllToFirebase() {
       const container = document.getElementById('instances-container');
       const entries = [];
@@ -529,16 +526,17 @@
       }
 
       instances.forEach(inst => {
+        const instanceId = inst.dataset.instanceId;
         const market = inst.querySelector('.market-select').value;
         const seb = inst.querySelector('.tanggal-sebelum').value.trim();
         const skr = inst.querySelector('.tanggal-sekarang').value.trim();
         const lalu = inst.querySelector('.result4d-lalu').value.trim();
         const skr4D = inst.querySelector('.result4d-sekarang').value.trim();
 
-        // Ambil hasil dari tabel
+        // ✅ Ambil hasil berdasarkan instanceId yang benar
         const hasil = {};
         for (let i = 1; i <= 12; i++) {
-          const cell = inst.querySelector(`#rumus-${i}`);
+          const cell = document.getElementById(`rumus-${instanceId}-${i}`);
           if (cell && cell.textContent !== "—") {
             hasil[i] = cell.textContent;
           }
@@ -572,7 +570,7 @@
       try {
         await remove(ref(db, 'generator_2d/kamar'));
         showMessage('🗑️ Semua data Firebase dihapus.');
-        loadFromFirebase(); // Reset UI
+        loadFromFirebase();
       } catch (err) {
         console.error('Firebase remove error:', err);
         showMessage('❌ Gagal hapus data Firebase.', true);
@@ -589,9 +587,8 @@
         const snapshot = await get(dbRef);
 
         if (!snapshot.exists()) {
-          // Buat instans pertama
-          const { element, tbody, marketSelect } = createKamarInstance(true);
-          container.appendChild(element);
+          const first = createKamarInstance(true);
+          container.appendChild(first);
           return;
         }
 
@@ -605,35 +602,19 @@
 
         if (latestEntry && latestEntry.entries && Array.isArray(latestEntry.entries)) {
           latestEntry.entries.forEach((entry, idx) => {
-            const { element, tbody, marketSelect } = createKamarInstance(idx === 0);
-            marketSelect.value = MARKETS.includes(entry.market) ? entry.market : MARKETS[0];
-            element.querySelector('.tanggal-sebelum').value = entry.tanggalSebelum || '';
-            element.querySelector('.tanggal-sekarang').value = entry.tanggalSekarang || '';
-            element.querySelector('.result4d-lalu').value = entry.result4DLalu || '';
-            element.querySelector('.result4d-sekarang').value = entry.result4D || '';
-
-            // Isi hasil
-            if (entry.hasil) {
-              for (let i = 1; i <= 12; i++) {
-                const cell = element.querySelector(`#rumus-${i}`);
-                if (cell && entry.hasil[i]) {
-                  cell.innerHTML = `<span class="rumus-tag">${entry.hasil[i]}</span>`;
-                }
-              }
-            }
-
-            container.appendChild(element);
+            const inst = createKamarInstance(idx === 0, entry);
+            container.appendChild(inst);
           });
           showMessage(`✅ Memuat ${latestEntry.entries.length} instans dari Firebase.`);
         } else {
-          const { element } = createKamarInstance(true);
-          container.appendChild(element);
+          const first = createKamarInstance(true);
+          container.appendChild(first);
         }
       } catch (err) {
         console.error('Gagal muat data:', err);
         showMessage('⚠️ Gagal muat data dari Firebase.', true);
-        const { element } = createKamarInstance(true);
-        container.appendChild(element);
+        const first = createKamarInstance(true);
+        container.appendChild(first);
       }
     }
 
