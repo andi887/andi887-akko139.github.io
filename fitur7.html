@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -134,7 +135,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
@@ -149,11 +150,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // 🔹 Daftar Market Lengkap
     const MARKETS = ["Cambodia", "Sidney", "China", "Japan", "SGP", "Taiwan", "Hongkong"];
     let instanceCounter = 0;
 
-    // ─── Fungsi Umum ───────────────────────────────────────────────
     function showMessage(msg, isError = false) {
       const el = document.getElementById('status');
       el.textContent = msg;
@@ -186,7 +185,6 @@
       }
     }
 
-    // ─── Buat Satu Instans Nota ────────────────────────────────────
     function createNotaInstance(isOriginal = false) {
       const id = 'nota-' + Date.now() + '-' + instanceCounter++;
       const box = document.createElement('div');
@@ -229,7 +227,6 @@
         row2.readOnly = !row2.readOnly;
         btnEdit.textContent = row1.readOnly ? '✏️ Edit' : '🔒 Kunci';
       };
-      // Default editable
       row1.readOnly = false;
       row2.readOnly = false;
 
@@ -256,13 +253,12 @@
       box.appendChild(actions);
 
       if (isOriginal) {
-        btnDelete.style.display = 'none'; // Sembunyikan hapus di instans pertama
+        btnDelete.style.display = 'none';
       }
 
       return box;
     }
 
-    // ─── Cloning ───────────────────────────────────────────────────
     function cloneNota() {
       const container = document.getElementById('nota-container');
       const clone = createNotaInstance(false);
@@ -273,14 +269,12 @@
     function removeAllClones() {
       const container = document.getElementById('nota-container');
       const children = container.children;
-      // Biarkan hanya anak pertama (instans asli)
       while (children.length > 1) {
         container.removeChild(children[1]);
       }
       showMessage('🧹 Semua cloning dihapus.');
     }
 
-    // ─── Simpan ke Firebase ────────────────────────────────────────
     async function saveAllToFirebase() {
       const container = document.getElementById('nota-container');
       const entries = [];
@@ -317,25 +311,78 @@
       }
     }
 
-    // ─── Hapus Semua di Firebase ───────────────────────────────────
     async function removeAllFromFirebase() {
       if (!confirm('Yakin hapus SEMUA data nota di Firebase?')) return;
       try {
         await remove(ref(db, 'generator_2d/nota'));
         showMessage('🗑️ Semua data Firebase dihapus.');
+        // Reset UI
+        document.getElementById('nota-container').innerHTML = '';
+        loadSavedNotes(); // Muat ulang → akan tampilkan instans kosong
       } catch (err) {
         console.error('Firebase remove error:', err);
         showMessage('❌ Gagal menghapus data Firebase.', true);
       }
     }
 
+    // ─── 🔑 FUNGSI BARU: MUAT DATA DARI FIREBASE SAAT HALAMAN DIBUKA ──────────
+    async function loadSavedNotes() {
+      const container = document.getElementById('nota-container');
+      container.innerHTML = '';
+
+      try {
+        const dbRef = ref(db, 'generator_2d/nota');
+        const snapshot = await get(dbRef);
+
+        if (!snapshot.exists()) {
+          const firstInstance = createNotaInstance(true);
+          container.appendChild(firstInstance);
+          return;
+        }
+
+        const data = snapshot.val();
+        let latestEntry = null;
+        let latestKey = null;
+
+        for (const key in data) {
+          if (data[key].savedAt && (!latestEntry || data[key].savedAt > latestEntry.savedAt)) {
+            latestEntry = data[key];
+            latestKey = key;
+          }
+        }
+
+        if (latestEntry && latestEntry.entries && Array.isArray(latestEntry.entries)) {
+          latestEntry.entries.forEach((entry, index) => {
+            const box = createNotaInstance(index === 0);
+            const select = box.querySelector('.market-select');
+            const row1 = box.querySelector('.nota-row:nth-of-type(1)');
+            const row2 = box.querySelector('.nota-row:nth-of-type(2)');
+
+            if (MARKETS.includes(entry.market)) {
+              select.value = entry.market;
+            }
+            row1.value = entry.baris1 || '';
+            row2.value = entry.baris2 || '';
+
+            container.appendChild(box);
+          });
+          showMessage(`✅ Memuat ${latestEntry.entries.length} instans dari Firebase.`);
+        } else {
+          const firstInstance = createNotaInstance(true);
+          container.appendChild(firstInstance);
+        }
+      } catch (err) {
+        console.error('Gagal muat data dari Firebase:', err);
+        showMessage('⚠️ Gagal muat data dari Firebase.', true);
+        const firstInstance = createNotaInstance(true);
+        container.appendChild(firstInstance);
+      }
+    }
+
     // ─── Inisialisasi ──────────────────────────────────────────────
     function init() {
-      const container = document.getElementById('nota-container');
-      const firstInstance = createNotaInstance(true);
-      container.appendChild(firstInstance);
+      loadSavedNotes(); // 🔥 Muat otomatis saat halaman dibuka
 
-      // Event Listeners
       document.getElementById('btn-cloning').addEventListener('click', cloneNota);
       document.getElementById('btn-hapus-cloning').addEventListener('click', removeAllClones);
       document.getElementById('btn-simpan-semua').addEventListener('click', saveAllToFirebase);
