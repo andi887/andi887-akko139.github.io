@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -37,6 +38,8 @@
       font-size: 16px;
       text-align: center;
       margin-right: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
     button {
       padding: 8px 16px;
@@ -45,6 +48,7 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 14px;
     }
     button:hover { opacity: 0.9; }
     .result {
@@ -53,6 +57,7 @@
       padding: 16px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: none;
     }
     .kamar-box {
       margin-top: 16px;
@@ -69,6 +74,7 @@
       word-break: break-all;
       font-family: monospace;
       margin: 8px 0;
+      line-height: 1.4;
     }
     .btn-salin {
       background: #2196F3;
@@ -103,39 +109,25 @@
 
     <div class="input-area">
       <input type="text" id="input2D" placeholder="Contoh: 12" maxlength="2" />
-      <button onclick="cariKelompok()">Cari</button>
+      <button id="btnCari">Cari</button>
     </div>
 
     <div id="status"></div>
-    <div id="hasil" class="result" style="display:none;"></div>
+    <div id="hasil" class="result"></div>
 
     <div class="action-buttons">
-      <button class="btn-edit" onclick="editData()">Edit</button>
-      <button onclick="simpanData()">Simpan ke Firebase</button>
-      <button class="btn-delete" onclick="hapusData()">Hapus</button>
+      <button class="btn-edit" id="btnEdit">Edit</button>
+      <button id="btnSimpan">Simpan ke Firebase</button>
+      <button class="btn-delete" id="btnHapus">Hapus</button>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  <!-- Firebase SDK (Versi Kompatibel Lama) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    // === KONFIGURASI FIREBASE ===
-    const firebaseConfig = {
-      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
-      authDomain: "nomoromosse.firebaseapp.com",
-      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "nomoromosse",
-      storageBucket: "nomoromosse.firebasestorage.app",
-      messagingSenderId: "985183830784",
-      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-
-    // === TABEL PASANGAN KAMAR (diperbarui, anti-simetri) ===
+  <script>
+    // === 1. DATA STATIS (TIDAK BUTUH FIREBASE) ===
     const pasanganKamar = {
       "00":[1,2],"11":[1,3],"22":[2,3],"33":[1,2],"44":[1,3],"55":[2,3],"66":[1,2],"77":[1,3],"88":[2,3],"99":[1,2],
       "01":[1,2],"10":[2,3],"02":[1,3],"20":[1,2],"03":[2,3],"30":[1,3],"04":[1,2],"40":[1,3],"05":[2,3],"50":[1,2],
@@ -149,118 +141,139 @@
       "68":[1,2],"86":[1,3],"69":[1,3],"96":[2,3],"78":[2,3],"87":[1,2],"79":[1,3],"97":[2,3],"89":[1,2],"98":[1,3]
     };
 
-    // === PEMETAAN SHIO → KAMAR ===
-    const shioKeKamar = {
-      1: 1, 4: 1, 7: 1, 10: 1,
-      2: 2, 5: 2, 8: 2, 11: 2,
-      3: 3, 6: 3, 9: 3, 12: 3
-    };
-
-    // === GENERATE SEMUA 2D PER KAMAR ===
-    const kamar2D = { 1: [], 2: [], 3: [] };
-    for (let num = 0; num <= 99; num++) {
-      const duaDigit = String(num).padStart(2, '0');
-      const angka = num === 0 ? 0 : num;
-      const shio = (angka % 12 === 0) ? 12 : (angka % 12);
-      const kamar = shioKeKamar[shio];
-      kamar2D[kamar].push(duaDigit);
+    const shioKeKamar = {1:1,4:1,7:1,10:1, 2:2,5:2,8:2,11:2, 3:3,6:3,9:3,12:3};
+    const kamar2D = {1:[],2:[],3:[]};
+    for (let n = 0; n <= 99; n++) {
+      const num = String(n).padStart(2, '0');
+      const shio = (n % 12 === 0) ? 12 : (n % 12);
+      kamar2D[shioKeKamar[shio]].push(num);
     }
 
-    // === FUNGSI UTAMA ===
+    // === 2. STATE ===
     let currentData = null;
     let currentKey = null;
 
-    function cariKelompok() {
-      const input = document.getElementById('input2D').value.trim();
-      if (!/^\d{2}$/.test(input)) {
-        showStatus("Masukkan 2 digit angka!", "error");
-        return;
-      }
-
-      if (!pasanganKamar[input]) {
-        showStatus("Angka tidak valid!", "error");
-        return;
-      }
-
-      const [k1, k2] = pasanganKamar[input];
-      const hasilDiv = document.getElementById('hasil');
-      hasilDiv.innerHTML = `
-        <div><strong>Pasangan Kamar: ${k1}, ${k2}</strong></div>
-        <div class="kamar-box">
-          <div class="kamar-title">Kamar ${k1}: shio ${k1 === 1 ? '1,4,7,10' : k1 === 2 ? '2,5,8,11' : '3,6,9,12'}</div>
-          <div class="angka" id="angka-kamar-${k1}">${kamar2D[k1].join('*')}</div>
-          <button class="btn-salin" onclick="salinTeks('angka-kamar-${k1}')">Salin</button>
-        </div>
-        <div class="kamar-box">
-          <div class="kamar-title">Kamar ${k2}: shio ${k2 === 1 ? '1,4,7,10' : k2 === 2 ? '2,5,8,11' : '3,6,9,12'}</div>
-          <div class="angka" id="angka-kamar-${k2}">${kamar2D[k2].join('*')}</div>
-          <button class="btn-salin" onclick="salinTeks('angka-kamar-${k2}')">Salin</button>
-        </div>
-      `;
-      hasilDiv.style.display = 'block';
-
-      currentData = {
-        input: input,
-        kamar: [k1, k2],
-        waktu: new Date().toISOString()
-      };
-      showStatus("Hasil siap disimpan.", "success");
-    }
-
-    function salinTeks(id) {
-      const text = document.getElementById(id).innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        showStatus("Teks disalin!", "success");
-      }).catch(() => {
-        showStatus("Gagal menyalin.", "error");
-      });
-    }
-
-    function simpanData() {
-      if (!currentData) {
-        showStatus("Tidak ada data untuk disimpan!", "error");
-        return;
-      }
-      const newRef = ref(database, 'fitur11/' + Date.now());
-      currentKey = newRef.key;
-      set(newRef, currentData)
-        .then(() => {
-          showStatus("✅ Data tersimpan ke Firebase!", "success");
-        })
-        .catch(err => {
-          showStatus("❌ Gagal: " + err.message, "error");
-        });
-    }
-
-    function editData() {
-      if (!currentData) {
-        showStatus("Tidak ada data untuk diedit!", "error");
-        return;
-      }
-      document.getElementById('input2D').value = currentData.input;
-      showStatus("Edit input, lalu klik Simpan.", "success");
-    }
-
-    function hapusData() {
-      if (!currentKey) {
-        showStatus("Tidak ada data untuk dihapus!", "error");
-        return;
-      }
-      remove(ref(database, 'fitur11/' + currentKey))
-        .then(() => {
-          currentKey = null;
-          document.getElementById('hasil').style.display = 'none';
-          showStatus("Data dihapus.", "success");
-        })
-        .catch(err => {
-          showStatus("Gagal hapus: " + err.message, "error");
-        });
-    }
-
+    // === 3. FUNGSI BANTUAN ===
     function showStatus(text, type) {
-      const statusDiv = document.getElementById('status');
-      statusDiv.textContent = text;
-      statusDiv.className = type;
+      const el = document.getElementById('status');
+      el.textContent = text;
+      el.className = type;
+    }
+
+    function salinTeks(teks) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(teks).then(() => {
+          showStatus("Disalin!", "success");
+        });
+      } else {
+        showStatus("Tidak didukung.", "error");
+      }
+    }
+
+    // === 4. INISIALISASI UI (JALAN MESKI FIREBASE GAGAL) ===
+    document.addEventListener('DOMContentLoaded', () => {
+      // Tombol Cari
+      document.getElementById('btnCari').addEventListener('click', () => {
+        const raw = document.getElementById('input2D').value.trim();
+        if (!raw || !/^\d+$/.test(raw) || raw.length > 2) {
+          showStatus("Masukkan 1-2 digit angka!", "error");
+          return;
+        }
+        const input = String(raw).padStart(2, '0');
+        if (!pasanganKamar[input]) {
+          showStatus("Angka tidak valid!", "error");
+          return;
+        }
+
+        const [k1, k2] = pasanganKamar[input];
+        const hasilDiv = document.getElementById('hasil');
+        hasilDiv.innerHTML = `
+          <div><strong>Pasangan Kamar: ${k1}, ${k2}</strong></div>
+          <div class="kamar-box">
+            <div class="kamar-title">Kamar ${k1}: shio ${k1 === 1 ? '1,4,7,10' : k1 === 2 ? '2,5,8,11' : '3,6,9,12'}</div>
+            <div class="angka" id="angka1">${kamar2D[k1].join('*')}</div>
+            <button class="btn-salin" onclick="salinTeks('${kamar2D[k1].join('*')}')">Salin</button>
+          </div>
+          <div class="kamar-box">
+            <div class="kamar-title">Kamar ${k2}: shio ${k2 === 1 ? '1,4,7,10' : k2 === 2 ? '2,5,8,11' : '3,6,9,12'}</div>
+            <div class="angka" id="angka2">${kamar2D[k2].join('*')}</div>
+            <button class="btn-salin" onclick="salinTeks('${kamar2D[k2].join('*')}')">Salin</button>
+          </div>
+        `;
+        hasilDiv.style.display = 'block';
+        currentData = { input, kamar: [k1, k2], waktu: new Date().toISOString() };
+        showStatus("Hasil siap.", "success");
+      });
+
+      // Edit
+      document.getElementById('btnEdit').addEventListener('click', () => {
+        if (currentData) {
+          document.getElementById('input2D').value = currentData.input;
+          showStatus("Edit input, lalu klik Cari.", "success");
+        } else {
+          showStatus("Tidak ada data.", "error");
+        }
+      });
+
+      // Simpan & Hapus → akan diisi setelah Firebase siap
+      document.getElementById('btnSimpan').addEventListener('click', () => {
+        if (window.firebaseReady && currentData) {
+          simpanKeFirebase();
+        } else {
+          showStatus("Firebase belum siap.", "error");
+        }
+      });
+
+      document.getElementById('btnHapus').addEventListener('click', () => {
+        if (window.firebaseReady && currentKey) {
+          hapusDariFirebase();
+        } else {
+          showStatus("Tidak ada data untuk dihapus.", "error");
+        }
+      });
+
+      // Daftarkan salinTeks ke window
+      window.salinTeks = salinTeks;
+    });
+
+    // === 5. INISIALISASI FIREBASE (DIPISAH, TIDAK GANGGU UI) ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
+      authDomain: "nomoromosse.firebaseapp.com",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nomoromosse",
+      storageBucket: "nomoromosse.firebasestorage.app",
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
+    };
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+      window.firebaseReady = true;
+
+      // Fungsi Firebase
+      function simpanKeFirebase() {
+        const ref = database.ref('fitur11').push();
+        currentKey = ref.key;
+        ref.set(currentData)
+          .then(() => showStatus("✅ Tersimpan!", "success"))
+          .catch(e => showStatus("❌ Gagal: " + e.message, "error"));
+      }
+
+      function hapusDariFirebase() {
+        database.ref('fitur11/' + currentKey).remove()
+          .then(() => {
+            currentKey = null;
+            currentData = null;
+            document.getElementById('hasil').style.display = 'none';
+            showStatus("Dihapus.", "success");
+          })
+          .catch(e => showStatus("Gagal hapus: " + e.message, "error"));
+      }
+    } catch (e) {
+      console.warn("Firebase gagal inisialisasi:", e);
+      window.firebaseReady = false;
     }
   </script>
 </body>
