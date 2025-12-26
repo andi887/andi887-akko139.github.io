@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fitur 11 - kelompok</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 16px;
+      color: #333;
+    }
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: #2196F3;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .back-btn:hover {
+      text-decoration: underline;
+    }
+    .feature-label {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+    #status {
+      text-align: center;
+      margin: 10px 0;
+      min-height: 24px;
+      font-weight: bold;
+    }
+    .success { color: #4CAF50; }
+    .error { color: #f44336; }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-btn">← Kembali ke Beranda</a>
+  <div class="feature-label">kelompok</div>
+  <div id="status">Menunggu aksi...</div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    // === IMPOR MODUL FIREBASE ===
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    // === KONFIGURASI FIREBASE — GANTI DENGAN NILAI DARI fitur1.html ANDA ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
+      authDomain: "nomoromosse.firebaseapp.com",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nomoromosse",
+      storageBucket: "nomoromosse.firebasestorage.app",
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
+    };
+
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Contoh: baca data dari /fitur11 (opsional, untuk real-time)
+    const statusDiv = document.getElementById('status');
+    onValue(ref(database, 'fitur11'), (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Anda bisa tampilkan data di sini nanti
+        statusDiv.textContent = "Data fitur11 dimuat secara real-time.";
+        statusDiv.className = "success";
+      }
+    });
+
+    // Fungsi contoh simpan (bisa dikembangkan)
+    window.simpanContoh = function() {
+      set(ref(database, 'fitur11/contoh'), {
+        waktu: Date.now(),
+        nilai: "data uji"
+      })
+      .then(() => {
+        statusDiv.textContent = "✅ Data tersimpan!";
+        statusDiv.className = "success";
+      })
+      .catch(err => {
+        statusDiv.textContent = "❌ Gagal: " + err.message;
+        statusDiv.className = "error";
+      });
+    };
+  </script>
+
+  <!-- Opsional: tombol uji simpan -->
+  <!-- <button onclick="simpanContoh()">Simpan Contoh ke Firebase</button> -->
+</body>
+</html>
