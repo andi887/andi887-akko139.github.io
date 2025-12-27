@@ -1,133 +1,240 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fitur 11 - kelompok</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fitur 11 - Kelompok</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 16px;
-      color: #333;
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22d3ee;
+      --accent2: #a78bfa;
+      --danger: #ef4444;
+      --ok: #10b981;
     }
-    .back-btn {
-      display: inline-block;
-      margin-bottom: 16px;
-      color: #2196F3;
-      text-decoration: none;
-      font-weight: bold;
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 20% 20%, #0b1324, #0a1020 60%, #070b18);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.6;
+      padding: 24px;
     }
     .container {
-      max-width: 600px;
+      max-width: 980px;
       margin: 0 auto;
+    }
+    .back-home {
+      text-align: right;
+      margin-bottom: 16px;
+    }
+    .back-home a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     h2 {
       text-align: center;
-      color: #2c3e50;
+      font-size: 1.6rem;
+      margin: 0 0 20px;
+      letter-spacing: 0.2px;
     }
-    .input-area {
-      text-align: center;
-      margin: 20px 0;
+    .card {
+      background: linear-gradient(180deg, #121826, #0f1624);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
     }
-    input {
-      padding: 8px;
-      width: 100px;
-      font-size: 16px;
-      text-align: center;
-      margin-right: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input[type="text"],
+    select {
+      width: 100%;
+      background: #0c1220;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    input[type="text"]::placeholder {
+      color: #6b7280;
+    }
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12);
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
     }
     button {
-      padding: 8px 16px;
-      background: #4CAF50;
-      color: white;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #0b1020;
+      font-weight: 700;
       border: none;
-      border-radius: 4px;
+      border-radius: 10px;
+      padding: 10px 14px;
       cursor: pointer;
-      font-size: 14px;
+      transition: transform 0.08s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
-    button:hover { opacity: 0.9; }
-    .result {
-      margin-top: 20px;
-      background: white;
-      padding: 16px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      display: none;
+    button:hover { filter: brightness(1.08); }
+    button:active { transform: translateY(1px); }
+    .btn-secondary {
+      background: #0c1220;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
     }
-    .kamar-box {
-      margin-top: 16px;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
+    .btn-edit { background: linear-gradient(90deg, #FF9800, #FFB347); color: #0b1020; }
+    .btn-delete { background: linear-gradient(90deg, var(--danger), #f87171); color: #0b1020; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #0c1220;
+      border: 1px solid rgba(255,255,255,0.08);
     }
-    .kamar-title {
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: #2c3e50;
+    .digit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #12192a, #0d1424);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--text);
     }
     .angka {
       word-break: break-all;
       font-family: monospace;
-      margin: 8px 0;
-      line-height: 1.4;
+      margin: 12px 0;
+      line-height: 1.5;
+      font-size: 0.95rem;
     }
-    .btn-salin {
-      background: #2196F3;
-      padding: 6px 12px;
-      font-size: 14px;
-    }
-    .action-buttons {
+    .kamar-box {
       margin-top: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.2);
+    }
+    .kamar-title {
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+    .status {
       text-align: center;
-    }
-    .btn-delete {
-      background: #f44336;
-      margin-left: 8px;
-    }
-    .btn-edit {
-      background: #FF9800;
-    }
-    #status {
-      text-align: center;
-      margin: 10px 0;
       min-height: 24px;
-      font-weight: bold;
+      margin: 12px 0;
+      font-weight: 600;
     }
-    .success { color: #4CAF50; }
-    .error { color: #f44336; }
+    .success { color: var(--ok); }
+    .error { color: var(--danger); }
+    .btn-salin {
+      background: linear-gradient(90deg, var(--ok), #34d399);
+      color: #0b1020;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 36px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <a href="index.html" class="back-btn">← Kembali ke Beranda</a>
-    <h2>kelompok</h2>
-
-    <div class="input-area">
-      <input type="text" id="input2D" placeholder="Contoh: 12" maxlength="2" />
-      <button id="btnCari">Cari</button>
+    <div class="back-home">
+      <a href="index.html">← Kembali ke Beranda</a>
     </div>
 
-    <div id="status"></div>
-    <div id="hasil" class="result"></div>
+    <h2>Kelompok</h2>
 
-    <div class="action-buttons">
-      <button class="btn-edit" id="btnEdit">Edit</button>
-      <button id="btnSimpan">Simpan ke Firebase</button>
-      <button class="btn-delete" id="btnHapus">Hapus</button>
+    <div class="card">
+      <div style="margin-bottom: 16px;">
+        <label for="market">Pilih Market</label>
+        <select id="market">
+          <option value="">-- Pilih Market --</option>
+          <option value="Cambodia">Cambodia</option>
+          <option value="Sidney">Sidney</option>
+          <option value="China">China</option>
+          <option value="Japan">Japan</option>
+          <option value="SGP">SGP</option>
+          <option value="Taiwan">Taiwan</option>
+          <option value="Hongkong">Hongkong</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label for="input4D">Input 4D (contoh: 1234)</label>
+        <input type="text" id="input4D" placeholder="Contoh: 1234" maxlength="4" />
+      </div>
+
+      <div class="btn-row">
+        <button id="btnCari">Cari</button>
+        <button class="btn-secondary" id="btnEdit">Edit</button>
+        <button id="btnSimpan">Simpan ke Cloud</button>
+        <button class="btn-delete" id="btnHapus">Hapus dari Cloud</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
+
+    <div id="hasil" class="card" style="display: none;">
+      <h3>Hasil Kelompok</h3>
+      <div id="hasilContent"></div>
     </div>
   </div>
 
-  <!-- Firebase SDK (Versi Kompatibel Lama) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
   <script>
-    // === 1. DATA STATIS (TIDAK BUTUH FIREBASE) ===
+    // 🔐 Konfigurasi Firebase — pastikan tidak ada spasi!
+    const firebaseConfig = {
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
+      authDomain: "nomoromosse.firebaseapp.com",
+      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nomoromosse",
+      storageBucket: "nomoromosse.appspot.com",
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const database = firebase.database();
+
+    // === DATA STATIS ===
     const pasanganKamar = {
       "00":[1,2],"11":[1,3],"22":[2,3],"33":[1,2],"44":[1,3],"55":[2,3],"66":[1,2],"77":[1,3],"88":[2,3],"99":[1,2],
       "01":[1,2],"10":[2,3],"02":[1,3],"20":[1,2],"03":[2,3],"30":[1,3],"04":[1,2],"40":[1,3],"05":[2,3],"50":[1,2],
@@ -149,131 +256,206 @@
       kamar2D[shioKeKamar[shio]].push(num);
     }
 
-    // === 2. STATE ===
+    // === STATE ===
     let currentData = null;
     let currentKey = null;
+    let selectedMarket = null;
 
-    // === 3. FUNGSI BANTUAN ===
-    function showStatus(text, type) {
+    // === FUNGSI BANTUAN ===
+    function showStatus(text, type = "") {
       const el = document.getElementById('status');
       el.textContent = text;
-      el.className = type;
+      el.className = "status " + type;
     }
 
     function salinTeks(teks) {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(teks).then(() => {
-          showStatus("Disalin!", "success");
+          showStatus("✅ Disalin ke clipboard!", "success");
+        }).catch(() => {
+          showStatus("❌ Gagal menyalin.", "error");
         });
       } else {
-        showStatus("Tidak didukung.", "error");
+        showStatus("❌ Clipboard tidak didukung.", "error");
       }
     }
 
-    // === 4. INISIALISASI UI (JALAN MESKI FIREBASE GAGAL) ===
+    function renderHasil(kopAs2D, kamar) {
+      const [k1, k2] = kamar;
+      const shioText = (k) => k === 1 ? "1,4,7,10" : k === 2 ? "2,5,8,11" : "3,6,9,12";
+      const html = `
+        <div><strong>Kop-As: ${kopAs2D} → Pasangan Kamar: ${k1}, ${k2}</strong></div>
+        <div class="kamar-box">
+          <div class="kamar-title">Kamar ${k1}: shio ${shioText(k1)}</div>
+          <div class="angka" id="angka1">${kamar2D[k1].join('*')}</div>
+          <button class="btn-salin" data-copy="${kamar2D[k1].join('*')}">Salin</button>
+        </div>
+        <div class="kamar-box">
+          <div class="kamar-title">Kamar ${k2}: shio ${shioText(k2)}</div>
+          <div class="angka" id="angka2">${kamar2D[k2].join('*')}</div>
+          <button class="btn-salin" data-copy="${kamar2D[k2].join('*')}">Salin</button>
+        </div>
+      `;
+      document.getElementById('hasilContent').innerHTML = html;
+      document.getElementById('hasil').style.display = 'block';
+
+      // Event delegation untuk tombol salin
+      document.querySelectorAll('.btn-salin').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const teks = e.target.getAttribute('data-copy');
+          salinTeks(teks);
+        });
+      });
+    }
+
+    // === INISIALISASI DOM ===
     document.addEventListener('DOMContentLoaded', () => {
-      // Tombol Cari
-      document.getElementById('btnCari').addEventListener('click', () => {
-        const raw = document.getElementById('input2D').value.trim();
-        if (!raw || !/^\d+$/.test(raw) || raw.length > 2) {
-          showStatus("Masukkan 1-2 digit angka!", "error");
+      const marketSelect = document.getElementById('market');
+      const input4D = document.getElementById('input4D');
+      const btnCari = document.getElementById('btnCari');
+      const btnEdit = document.getElementById('btnEdit');
+      const btnSimpan = document.getElementById('btnSimpan');
+      const btnHapus = document.getElementById('btnHapus');
+
+      // Validasi input 4D
+      input4D.addEventListener('input', () => {
+        input4D.value = input4D.value.replace(/[^0-9]/g, '').slice(0, 4);
+      });
+
+      // Cari
+      btnCari.addEventListener('click', () => {
+        const market = marketSelect.value;
+        if (!market) {
+          showStatus("⚠️ Pilih market terlebih dahulu.", "error");
           return;
         }
-        const input = String(raw).padStart(2, '0');
-        if (!pasanganKamar[input]) {
-          showStatus("Angka tidak valid!", "error");
+        const raw = input4D.value.trim();
+        if (raw.length !== 4 || !/^\d{4}$/.test(raw)) {
+          showStatus("⚠️ Masukkan 4 digit angka!", "error");
           return;
         }
 
-        const [k1, k2] = pasanganKamar[input];
-        const hasilDiv = document.getElementById('hasil');
-        hasilDiv.innerHTML = `
-          <div><strong>Pasangan Kamar: ${k1}, ${k2}</strong></div>
-          <div class="kamar-box">
-            <div class="kamar-title">Kamar ${k1}: shio ${k1 === 1 ? '1,4,7,10' : k1 === 2 ? '2,5,8,11' : '3,6,9,12'}</div>
-            <div class="angka" id="angka1">${kamar2D[k1].join('*')}</div>
-            <button class="btn-salin" onclick="salinTeks('${kamar2D[k1].join('*')}')">Salin</button>
-          </div>
-          <div class="kamar-box">
-            <div class="kamar-title">Kamar ${k2}: shio ${k2 === 1 ? '1,4,7,10' : k2 === 2 ? '2,5,8,11' : '3,6,9,12'}</div>
-            <div class="angka" id="angka2">${kamar2D[k2].join('*')}</div>
-            <button class="btn-salin" onclick="salinTeks('${kamar2D[k2].join('*')}')">Salin</button>
-          </div>
-        `;
-        hasilDiv.style.display = 'block';
-        currentData = { input, kamar: [k1, k2], waktu: new Date().toISOString() };
-        showStatus("Hasil siap.", "success");
+        const as = raw[0];
+        const kop = raw[1];
+        const kopAs2D = kop + as; // INVERS: kop-as
+
+        if (!pasanganKamar[kopAs2D]) {
+          showStatus("❌ Kombinasi kop-as tidak dikenali.", "error");
+          return;
+        }
+
+        const kamar = pasanganKamar[kopAs2D];
+        renderHasil(kopAs2D, kamar);
+
+        currentData = {
+          input4D: raw,
+          kopAs2D: kopAs2D,
+          kamar: kamar,
+          market: market,
+          timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        selectedMarket = market;
+        showStatus("✅ Hasil siap.", "success");
       });
 
       // Edit
-      document.getElementById('btnEdit').addEventListener('click', () => {
+      btnEdit.addEventListener('click', () => {
         if (currentData) {
-          document.getElementById('input2D').value = currentData.input;
-          showStatus("Edit input, lalu klik Cari.", "success");
+          input4D.value = currentData.input4D;
+          marketSelect.value = currentData.market;
+          selectedMarket = currentData.market;
+          showStatus("✏️ Edit input, lalu klik Cari.", "success");
         } else {
-          showStatus("Tidak ada data.", "error");
+          showStatus("ℹ️ Tidak ada data untuk diedit.", "error");
         }
       });
 
-      // Simpan & Hapus → akan diisi setelah Firebase siap
-      document.getElementById('btnSimpan').addEventListener('click', () => {
-        if (window.firebaseReady && currentData) {
-          simpanKeFirebase();
-        } else {
-          showStatus("Firebase belum siap.", "error");
+      // Simpan
+      btnSimpan.addEventListener('click', () => {
+        if (!currentData || !selectedMarket) {
+          showStatus("⚠️ Tidak ada data untuk disimpan.", "error");
+          return;
         }
+        const ref = database.ref(`fitur11/${selectedMarket}`).push();
+        ref.set(currentData).then(() => {
+          currentKey = ref.key;
+          localStorage.setItem('lastMarket', selectedMarket);
+          showStatus("✅ Data tersimpan ke cloud!", "success");
+        }).catch(err => {
+          console.error("Simpan error:", err);
+          showStatus("❌ Gagal simpan: " + (err.message || "cek koneksi"), "error");
+        });
       });
 
-      document.getElementById('btnHapus').addEventListener('click', () => {
-        if (window.firebaseReady && currentKey) {
-          hapusDariFirebase();
-        } else {
-          showStatus("Tidak ada data untuk dihapus.", "error");
+      // Hapus
+      btnHapus.addEventListener('click', () => {
+        if (!currentKey || !selectedMarket) {
+          showStatus("ℹ️ Tidak ada data cloud untuk dihapus.", "error");
+          return;
         }
-      });
-
-      // Daftarkan salinTeks ke window
-      window.salinTeks = salinTeks;
-    });
-
-    // === 5. INISIALISASI FIREBASE (DIPISAH, TIDAK GANGGU UI) ===
-    const firebaseConfig = {
-      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
-      authDomain: "nomoromosse.firebaseapp.com",
-      databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "nomoromosse",
-      storageBucket: "nomoromosse.firebasestorage.app",
-      messagingSenderId: "985183830784",
-      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
-    };
-
-    try {
-      firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
-      window.firebaseReady = true;
-
-      // Fungsi Firebase
-      function simpanKeFirebase() {
-        const ref = database.ref('fitur11').push();
-        currentKey = ref.key;
-        ref.set(currentData)
-          .then(() => showStatus("✅ Tersimpan!", "success"))
-          .catch(e => showStatus("❌ Gagal: " + e.message, "error"));
-      }
-
-      function hapusDariFirebase() {
-        database.ref('fitur11/' + currentKey).remove()
+        if (!confirm(`Hapus data untuk market "${selectedMarket}"?`)) return;
+        database.ref(`fitur11/${selectedMarket}/${currentKey}`).remove()
           .then(() => {
             currentKey = null;
             currentData = null;
             document.getElementById('hasil').style.display = 'none';
-            showStatus("Dihapus.", "success");
+            localStorage.removeItem('lastMarket');
+            showStatus("🗑️ Data dihapus dari cloud.", "success");
           })
-          .catch(e => showStatus("Gagal hapus: " + e.message, "error"));
+          .catch(err => {
+            console.error("Hapus error:", err);
+            showStatus("❌ Gagal hapus: " + (err.message || "cek koneksi"), "error");
+          });
+      });
+
+      // Ganti market → auto-load
+      marketSelect.addEventListener('change', () => {
+        const market = marketSelect.value;
+        if (market) {
+          loadLatestData(market);
+        } else {
+          document.getElementById('hasil').style.display = 'none';
+          currentKey = null;
+          currentData = null;
+          selectedMarket = null;
+        }
+      });
+
+      // Auto-load saat halaman dibuka
+      const lastMarket = localStorage.getItem('lastMarket');
+      if (lastMarket) {
+        marketSelect.value = lastMarket;
+        setTimeout(() => loadLatestData(lastMarket), 300);
       }
-    } catch (e) {
-      console.warn("Firebase gagal inisialisasi:", e);
-      window.firebaseReady = false;
+    });
+
+    // === FUNGSI LOAD DATA TERAKHIR ===
+    async function loadLatestData(market) {
+      try {
+        const snapshot = await database.ref(`fitur11/${market}`)
+          .orderByChild("timestamp")
+          .limitToLast(1)
+          .once("value");
+
+        if (snapshot.exists()) {
+          const dataObj = snapshot.val();
+          const key = Object.keys(dataObj)[0];
+          const data = dataObj[key];
+
+          // Pulihkan UI
+          document.getElementById('input4D').value = data.input4D;
+          currentData = data;
+          currentKey = key;
+          selectedMarket = market;
+
+          // Tampilkan hasil
+          renderHasil(data.kopAs2D, data.kamar);
+          showStatus(`✅ Data termuat untuk market: ${market}`, "success");
+        }
+      } catch (err) {
+        console.warn("Gagal muat data:", err);
+        showStatus("⚠️ Gagal muat data dari cloud.", "error");
+      }
     }
   </script>
 </body>
