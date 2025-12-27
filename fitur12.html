@@ -198,7 +198,6 @@
       align-items: center;
       gap: 6px;
     }
-    /* Style untuk select agar konsisten */
     select {
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
@@ -211,7 +210,6 @@
 </head>
 <body>
   <div class="container">
-    <!-- 🔙 Navigasi Kembali ke Beranda -->
     <div class="back-home">
       <a href="index.html">← Kembali ke Beranda</a>
     </div>
@@ -223,7 +221,6 @@
     </header>
 
     <div class="card">
-      <!-- 🔽 Pilih Market -->
       <div style="margin-bottom: 16px;">
         <label for="market">Pilih Market</label>
         <select id="market">
@@ -255,7 +252,6 @@
       </div>
     </div>
 
-    <!-- 🔁 Blok Kloning -->
     <div id="cloneContainer" class="card" style="display: none;">
       <h3 style="margin-top: 0;">Klon Hasil</h3>
       <div class="grid">
@@ -319,7 +315,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
   <script>
-    // 🔐 Konfigurasi Firebase — sesuaikan dengan proyekmu
+    // 🔐 Konfigurasi Firebase — pastikan tidak ada spasi di akhir!
     const firebaseConfig = {
       apiKey: "GANTI_DENGAN_API_KEY_MU",
       authDomain: "nomoromosse.firebaseapp.com",
@@ -360,9 +356,9 @@
       const marketOut = id('marketOut');
       const marketFooter = id('marketFooter');
 
-      // Daftar market sesuai data market
       const MARKETS = ["Cambodia", "Sidney", "China", "Japan", "SGP", "Taiwan", "Hongkong"];
 
+      // === Fungsi logika perhitungan (tidak diubah) ===
       function isValid4D(str){
         return typeof str === 'string' && str.length === 4 && /^[0-9]{4}$/.test(str);
       }
@@ -511,74 +507,7 @@
         });
       }
 
-      btnCalc.addEventListener('click', ()=>{
-        const market = marketSelect.value;
-        if (!market || !MARKETS.includes(market)) {
-          warn.textContent = "Pilih market terlebih dahulu.";
-          warn.style.display = 'block';
-          out.style.display = 'none';
-          return;
-        }
-        const results = parseInputs();
-        if(!results){
-          warn.textContent = "Input harus berupa 4 digit angka (0000–9999).";
-          warn.style.display = 'block';
-          out.style.display = 'none';
-          return;
-        }
-        const heads = getHeads(results);
-        const freq = weightedFrequency(heads);
-        const mk = markovFromLast(heads);
-        const rh = rhythm(heads);
-        const pmedian = medianTrend(heads);
-        const pmissing = missingDigits(heads);
-        const praw = rawFrequency(heads);
-        const score = combine(freq.pfreq, mk.p, rh.pritme, pmedian, pmissing, praw);
-        render(results, heads, freq, mk, rh, pmedian, pmissing, praw, score, market);
-        selectedMarket = market; // simpan untuk simpan/hapus
-      });
-
-      btnSample.addEventListener('click', ()=>{
-        const sample = ["0145","1965","9677","8990","0870"];
-        inputs.forEach((el, i)=> el.value = sample[i]);
-      });
-
-      btnClear.addEventListener('click', ()=>{
-        inputs.forEach(el => el.value = '');
-        cloneInputs.forEach(el => el.value = '');
-        marketSelect.value = '';
-        cloneContainer.style.display = 'none';
-        warn.style.display = 'none';
-        out.style.display = 'none';
-        tbl.innerHTML = '';
-        headsEl.innerHTML = '';
-        deltasEl.innerHTML = '';
-        top7El.innerHTML = '';
-        sstarDigit.textContent = '-';
-        currentDataId = null;
-        selectedMarket = null;
-      });
-
-      btnClone.addEventListener('click', () => {
-        const market = marketSelect.value;
-        if (!market) {
-          alert("Pilih market terlebih dahulu!");
-          return;
-        }
-        const vals = inputs.map(i => i.value);
-        if (vals.some(v => !isValid4D(v))) {
-          alert("Isi semua input dengan 4 digit angka!");
-          return;
-        }
-        cloneInputs.forEach((el, i) => el.value = vals[i]);
-        cloneContainer.style.display = 'block';
-      });
-
-      btnDeleteClone.addEventListener('click', () => {
-        cloneInputs.forEach(el => el.value = '');
-        cloneContainer.style.display = 'none';
-      });
-
+      // === Fungsi Simpan dan Hapus (tidak diubah) ===
       btnSave.addEventListener('click', async () => {
         const market = marketSelect.value;
         if (!market || !MARKETS.includes(market)) {
@@ -611,10 +540,10 @@
         };
 
         try {
-          // Simpan ke: prediksi-kepala-7/{market}/{key}
           const ref = database.ref(`prediksi-kepala-7/${market}`).push(dataToSave);
           currentDataId = ref.key;
           selectedMarket = market;
+          localStorage.setItem('lastMarket', market); // simpan untuk auto-load
           alert(`✅ Data untuk market "${market}" berhasil disimpan!`);
         } catch (err) {
           console.error("Firebase save error:", err);
@@ -633,10 +562,142 @@
           await database.ref(`prediksi-kepala-7/${selectedMarket}/${currentDataId}`).remove();
           currentDataId = null;
           selectedMarket = null;
+          localStorage.removeItem('lastMarket');
           alert("🗑️ Data dihapus dari cloud.");
         } catch (err) {
           console.error("Firebase delete error:", err);
           alert("❌ Gagal menghapus: " + (err.message || "Cek koneksi"));
+        }
+      });
+
+      // === Fungsi Auto-Load Data Terbaru ===
+      async function loadLatestData(market) {
+        try {
+          const snapshot = await database.ref(`prediksi-kepala-7/${market}`)
+            .orderByChild("timestamp")
+            .limitToLast(1)
+            .once("value");
+
+          if (snapshot.exists()) {
+            const dataObj = snapshot.val();
+            const key = Object.keys(dataObj)[0];
+            const data = dataObj[key];
+
+            // Pulihkan input
+            const { inputs: savedInputs } = data;
+            inputs.forEach((el, i) => {
+              if (savedInputs[i]) el.value = savedInputs[i];
+            });
+
+            // Set state
+            currentDataId = key;
+            selectedMarket = market;
+            marketSelect.value = market;
+
+            // Hitung & tampilkan
+            const heads = getHeads(savedInputs);
+            const freq = weightedFrequency(heads);
+            const mk = markovFromLast(heads);
+            const rh = rhythm(heads);
+            const pmedian = medianTrend(heads);
+            const pmissing = missingDigits(heads);
+            const praw = rawFrequency(heads);
+            const score = combine(freq.pfreq, mk.p, rh.pritme, pmedian, pmissing, praw);
+            render(savedInputs, heads, freq, mk, rh, pmedian, pmissing, praw, score, market);
+          }
+        } catch (err) {
+          console.warn("Gagal memuat data dari Firebase:", err);
+        }
+      }
+
+      // === Event Listeners Asli ===
+      btnCalc.addEventListener('click', ()=>{
+        const market = marketSelect.value;
+        if (!market || !MARKETS.includes(market)) {
+          warn.textContent = "Pilih market terlebih dahulu.";
+          warn.style.display = 'block';
+          out.style.display = 'none';
+          return;
+        }
+        const results = parseInputs();
+        if(!results){
+          warn.textContent = "Input harus berupa 4 digit angka (0000–9999).";
+          warn.style.display = 'block';
+          out.style.display = 'none';
+          return;
+        }
+        const heads = getHeads(results);
+        const freq = weightedFrequency(heads);
+        const mk = markovFromLast(heads);
+        const rh = rhythm(heads);
+        const pmedian = medianTrend(heads);
+        const pmissing = missingDigits(heads);
+        const praw = rawFrequency(heads);
+        const score = combine(freq.pfreq, mk.p, rh.pritme, pmedian, pmissing, praw);
+        render(results, heads, freq, mk, rh, pmedian, pmissing, praw, score, market);
+        selectedMarket = market;
+      });
+
+      btnSample.addEventListener('click', ()=>{
+        const sample = ["0145","1965","9677","8990","0870"];
+        inputs.forEach((el, i)=> el.value = sample[i]);
+      });
+
+      btnClear.addEventListener('click', ()=>{
+        inputs.forEach(el => el.value = '');
+        cloneInputs.forEach(el => el.value = '');
+        marketSelect.value = '';
+        cloneContainer.style.display = 'none';
+        warn.style.display = 'none';
+        out.style.display = 'none';
+        tbl.innerHTML = '';
+        headsEl.innerHTML = '';
+        deltasEl.innerHTML = '';
+        top7El.innerHTML = '';
+        sstarDigit.textContent = '-';
+        currentDataId = null;
+        selectedMarket = null;
+        localStorage.removeItem('lastMarket');
+      });
+
+      btnClone.addEventListener('click', () => {
+        const market = marketSelect.value;
+        if (!market) {
+          alert("Pilih market terlebih dahulu!");
+          return;
+        }
+        const vals = inputs.map(i => i.value);
+        if (vals.some(v => !isValid4D(v))) {
+          alert("Isi semua input dengan 4 digit angka!");
+          return;
+        }
+        cloneInputs.forEach((el, i) => el.value = vals[i]);
+        cloneContainer.style.display = 'block';
+      });
+
+      btnDeleteClone.addEventListener('click', () => {
+        cloneInputs.forEach(el => el.value = '');
+        cloneContainer.style.display = 'none';
+      });
+
+      // === Auto-load saat market dipilih atau halaman dibuka ===
+      marketSelect.addEventListener('change', () => {
+        const market = marketSelect.value;
+        if (market && MARKETS.includes(market)) {
+          loadLatestData(market);
+        } else {
+          out.style.display = 'none';
+          currentDataId = null;
+          selectedMarket = null;
+        }
+      });
+
+      // Auto-load market terakhir saat halaman pertama kali dibuka
+      document.addEventListener('DOMContentLoaded', () => {
+        const lastMarket = localStorage.getItem('lastMarket');
+        if (lastMarket && MARKETS.includes(lastMarket)) {
+          marketSelect.value = lastMarket;
+          setTimeout(() => loadLatestData(lastMarket), 300);
         }
       });
 
