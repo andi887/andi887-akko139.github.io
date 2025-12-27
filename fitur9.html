@@ -2,163 +2,267 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dasar Lemah 2D</title>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22d3ee;
+      --accent2: #a78bfa;
+      --danger: #ef4444;
+      --ok: #10b981;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-      padding: 20px;
       margin: 0;
+      background: radial-gradient(1200px 800px at 20% 20%, #0b1324, #0a1020 60%, #070b18);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.6;
+      padding: 24px;
     }
     .container {
-      max-width: 600px;
+      max-width: 980px;
       margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .back-home {
+      text-align: right;
+      margin-bottom: 16px;
+    }
+    .back-home a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     h1 {
       text-align: center;
-      color: #2c3e50;
-      margin-top: 0;
+      font-size: 1.6rem;
+      margin: 0 0 20px;
+      letter-spacing: 0.2px;
+    }
+    .card {
+      background: linear-gradient(180deg, #121826, #0f1624);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input[type="text"],
+    select {
+      width: 100%;
+      background: #0c1220;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    input[type="text"]::placeholder {
+      color: #6b7280;
+    }
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12);
     }
     .input-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .btn-row {
       display: flex;
       gap: 10px;
-      margin: 15px 0;
-    }
-    input, select, button {
-      padding: 10px;
-      font-size: 16px;
-    }
-    input, select {
-      flex: 1;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      flex-wrap: wrap;
+      margin-top: 12px;
     }
     button {
-      background-color: #3498db;
-      color: white;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #0b1020;
+      font-weight: 700;
       border: none;
-      border-radius: 4px;
+      border-radius: 10px;
+      padding: 10px 14px;
       cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
-    button:hover {
-      background-color: #2980b9;
-    }
-    .result {
-      margin: 15px 0;
-      padding: 12px;
-      background-color: #eaf7ff;
-      border-left: 4px solid #3498db;
-      display: none;
-    }
-    .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .actions button {
-      flex: 1;
-    }
-    .btn-home {
-      background-color: #2ecc71;
-    }
-    .btn-home:hover {
-      background-color: #27ae60;
+    button:hover { filter: brightness(1.08); }
+    button:active { transform: translateY(1px); }
+    .btn-secondary {
+      background: #0c1220;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
     }
     .btn-delete {
-      background-color: #e74c3c;
+      background: linear-gradient(90deg, var(--danger), #f87171);
+      color: #0b1020;
     }
-    .btn-delete:hover {
-      background-color: #c0392b;
+    .btn-edit {
+      background: linear-gradient(90deg, #FF9800, #FFB347);
+      color: #0b1020;
     }
+    .result {
+      margin-top: 16px;
+      padding: 14px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      display: none;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #0c1220;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .digit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #12192a, #0d1424);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--text);
+    }
+    .status {
+      text-align: center;
+      min-height: 24px;
+      margin: 12px 0;
+      font-weight: 600;
+    }
+    .success { color: var(--ok); }
+    .error { color: var(--danger); }
     .saved-list {
       margin-top: 20px;
-      border-top: 1px solid #eee;
-      padding-top: 15px;
     }
     .saved-item {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .saved-item:last-child {
       border-bottom: none;
     }
-    .saved-item strong {
-      color: #2c3e50;
+    .saved-item button {
+      background: var(--ok);
+      color: #0b1020;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+    }
+    select {
+      appearance: none;
+      background-image: url("image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 36px;
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="back-home">
+      <a href="index.html">← Kembali ke Beranda</a>
+    </div>
+
     <h1>Dasar Lemah 2D</h1>
 
-    <!-- Pemilih Market -->
-    <div class="input-group">
-      <select id="marketSelect">
-        <option value="">Pilih Market</option>
-        <option value="Cambodia">Cambodia</option>
-        <option value="Sidney">Sidney</option>
-        <option value="China">China</option>
-        <option value="Japan">Japan</option>
-        <option value="SGP">SGP</option>
-        <option value="Taiwan">Taiwan</option>
-        <option value="Hongkong">Hongkong</option>
-      </select>
-    </div>
+    <div class="card">
+      <!-- Pemilih Market -->
+      <div style="margin-bottom: 16px;">
+        <label for="marketSelect">Pilih Market</label>
+        <select id="marketSelect">
+          <option value="">-- Pilih Market --</option>
+          <option value="Cambodia">Cambodia</option>
+          <option value="Sidney">Sidney</option>
+          <option value="China">China</option>
+          <option value="Japan">Japan</option>
+          <option value="SGP">SGP</option>
+          <option value="Taiwan">Taiwan</option>
+          <option value="Hongkong">Hongkong</option>
+        </select>
+      </div>
 
-    <div class="input-group">
-      <input type="text" id="input2D" placeholder="Masukkan 2D, contoh: 01" maxlength="2" />
-      <button onclick="generateResult()">Cari</button>
-    </div>
+      <!-- Input 2 Kolom 4D -->
+      <div class="input-group">
+        <div>
+          <label for="resultSebelum">Result Sebelumnya (4D)</label>
+          <input type="text" id="resultSebelum" placeholder="Contoh: 1234" maxlength="4" />
+        </div>
+        <div>
+          <label for="resultSekarang">Result Sekarang (4D)</label>
+          <input type="text" id="resultSekarang" placeholder="Contoh: 9076" maxlength="4" />
+        </div>
+      </div>
 
-    <div class="result" id="resultBox">
-      <div>2D: <strong id="show2D">--</strong></div>
-      <div>Dasar Lemah: <strong id="showDasar">--</strong></div>
-      <div class="actions">
-        <button class="btn-home" onclick="saveEntry()">Simpan</button>
-        <button onclick="editEntry()">Edit</button>
-        <button class="btn-delete" onclick="deleteEntry()">Hapus</button>
+      <div class="btn-row">
+        <button id="btnCari">Cari</button>
+        <button class="btn-secondary" id="btnEdit">Edit</button>
+        <button id="btnSimpan">Simpan ke Cloud</button>
+        <button class="btn-delete" id="btnHapus">Hapus dari Cloud</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <!-- Hasil -->
+      <div id="resultBox" class="result" style="display: none;">
+        <div>Kunci 2D (kop): <strong id="show2D">--</strong></div>
+        <div>Dasar Lemah: <span id="showDasar">--</span></div>
       </div>
     </div>
 
-    <div class="saved-list" id="savedList">
+    <!-- Data Tersimpan -->
+    <div class="card saved-list" id="savedList">
       <h3>Data Tersimpan</h3>
       <p><em>Pilih market untuk memuat data.</em></p>
     </div>
-
-    <div style="text-align: center; margin-top: 20px;">
-      <a href="index.html" style="display: inline-block; padding: 10px 20px; background-color: #9b59b6; color: white; text-decoration: none; border-radius: 4px;">
-        ← Kembali ke Beranda
-      </a>
-    </div>
   </div>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
   <script>
-    // === FIREBASE CONFIG — DISAMAKAN DENGAN FITUR7 (nomoromosse) ===
+    // 🔐 Konfigurasi Firebase — SESUAI PROYEK nomoromosse
     const firebaseConfig = {
-      apiKey: "AIzaSyA7kQhY3KdNc1yV8q6Zx9mQfLjW7bR2cD4", // placeholder valid format
+      apiKey: "AIzaSyALc-1SYjzRUcB-Ws01rab1mxlmcv2e6dA",
       authDomain: "nomoromosse.firebaseapp.com",
       databaseURL: "https://nomoromosse-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "nomoromosse",
       storageBucket: "nomoromosse.appspot.com",
-      messagingSenderId: "1072853276184",
-      appId: "1:1072853276184:web:7d8f1e2a3b4c5d6e7f8a9b"
+      messagingSenderId: "985183830784",
+      appId: "1:985183830784:web:fae21bdb94c1f0103769e5"
     };
 
-    // Inisialisasi Firebase
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const database = firebase.database();
 
-    // === RANDOM TERKENDALI (TETAP SAMA) ===
+    // === LOGIKA INTI DASAR LEMAH (TIDAK DIUBAH) ===
     function SeededRandom(seed) {
       this.seed = seed % 2147483647;
       if (this.seed <= 0) this.seed += 2147483646;
@@ -189,26 +293,15 @@
 
     const fullWeakMap = generateFullWeakMap();
     let savedData = {};
+    let current2D = null;
+    let selectedMarket = null;
 
-    // === MUAT DATA SAAT MARKET DIPILIH ===
-    document.getElementById('marketSelect').addEventListener('change', function() {
-      const market = this.value;
-      const listEl = document.getElementById('savedList');
-      if (!market) {
-        listEl.innerHTML = '<h3>Data Tersimpan</h3><p><em>Pilih market untuk memuat data.</em></p>';
-        savedData = {};
-        return;
-      }
-
-      const ref = database.ref(`fitur9/${market}`);
-      ref.on('value', (snapshot) => {
-        savedData = snapshot.val() || {};
-        renderSavedList(market);
-      }, (err) => {
-        console.error("Gagal muat data:", err);
-        listEl.innerHTML = '<h3>Data Tersimpan</h3><p><em>Gagal memuat data dari cloud.</em></p>';
-      });
-    });
+    // === FUNGSI BANTUAN ===
+    function showStatus(text, type = "") {
+      const el = document.getElementById('status');
+      el.textContent = text;
+      el.className = "status " + type;
+    }
 
     function renderSavedList(market) {
       const container = document.getElementById('savedList');
@@ -221,7 +314,7 @@
           html += `
             <div class="saved-item">
               <span><strong>${key}</strong>: ${d1} & ${d2}</span>
-              <button onclick="useSaved('${key}')" style="padding:4px 8px;font-size:12px;">Pakai</button>
+              <button onclick="useSaved('${key}')">Pakai</button>
             </div>
           `;
         });
@@ -230,115 +323,172 @@
       container.innerHTML = html;
     }
 
-    function generateResult() {
-      const input = document.getElementById('input2D').value.trim();
-      if (!/^\d{1,2}$/.test(input)) {
-        alert("Masukkan angka 2 digit (00–99).");
-        return;
-      }
-      const key = input.padStart(2, '0');
-      if (!(key in fullWeakMap)) {
-        alert("Nomor harus antara 00–99.");
-        return;
-      }
-
-      document.getElementById('show2D').textContent = key;
-      document.getElementById('showDasar').textContent = `${fullWeakMap[key][0]} & ${fullWeakMap[key][1]}`;
-      document.getElementById('resultBox').style.display = 'block';
-    }
-
-    // ✅ ✅ ✅ FUNGSI SIMPAN YANG SUDAH DIPERBAIKI ✅ ✅ ✅
-    function saveEntry() {
-      const market = document.getElementById('marketSelect').value;
-      const resultBox = document.getElementById('resultBox');
-      const current2D = document.getElementById('show2D').textContent;
-
-      // Validasi langsung dari UI — bukan dari variabel state
-      if (!market) {
-        alert("Pilih market terlebih dahulu.");
-        return;
-      }
-      if (resultBox.style.display !== 'block' || current2D === '--') {
-        alert("Hasilkan data terlebih dahulu dengan klik 'Cari'.");
-        return;
-      }
-
-      const [d1, d2] = fullWeakMap[current2D];
-      const ref = database.ref(`fitur9/${market}/${current2D}`);
-      
-      ref.set([d1, d2])
-        .then(() => {
-          alert("Data berhasil disimpan ke cloud!");
-          savedData[current2D] = [d1, d2];
-          renderSavedList(market);
-        })
-        .catch(err => {
-          console.error("Error simpan:", err);
-          alert("Gagal menyimpan. Periksa koneksi internet.");
-        });
-    }
-
-    function editEntry() {
-      const market = document.getElementById('marketSelect').value;
-      const current2D = document.getElementById('show2D').textContent;
-      if (!market || current2D === '--' || !savedData[current2D]) {
-        alert("Tidak ada data tersimpan untuk diedit.");
-        return;
-      }
-      const newData = prompt(`Edit dasar lemah untuk ${current2D} (format: d1,d2)`);
-      if (newData) {
-        const parts = newData.split(',').map(p => p.trim());
-        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-          const [d1, d2] = parts.map(Number);
-          if (d1 >= 1 && d1 <= 9 && d2 >= 1 && d2 <= 9 && d1 !== d2) {
-            database.ref(`fitur9/${market}/${current2D}`).set([d1, d2])
-              .then(() => {
-                document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
-                savedData[current2D] = [d1, d2];
-                renderSavedList(market);
-                alert("Data diperbarui.");
-              });
-          } else {
-            alert("Nilai harus 1–9 dan berbeda.");
-          }
-        } else {
-          alert("Format: d1,d2");
-        }
-      }
-    }
-
-    function deleteEntry() {
-      const market = document.getElementById('marketSelect').value;
-      const current2D = document.getElementById('show2D').textContent;
-      if (!market || current2D === '--' || !savedData[current2D]) {
-        alert("Tidak ada data untuk dihapus.");
-        return;
-      }
-      if (confirm(`Hapus ${current2D} dari ${market}?`)) {
-        database.ref(`fitur9/${market}/${current2D}`).remove()
-          .then(() => {
-            delete savedData[current2D];
-            document.getElementById('resultBox').style.display = 'none';
-            renderSavedList(market);
-            alert("Data dihapus.");
-          });
-      }
-    }
-
-    function useSaved(key) {
+    window.useSaved = function(key) {
       if (!savedData[key]) return;
       const [d1, d2] = savedData[key];
       document.getElementById('show2D').textContent = key;
       document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
       document.getElementById('resultBox').style.display = 'block';
-      document.getElementById('input2D').value = key;
+      current2D = key;
+      showStatus(`✅ Data ${key} dimuat.`, "success");
+    };
+
+    // === EKSTRAKSI KOP ===
+    function getKop2D(resultSebelum, resultSekarang) {
+      if (resultSebelum.length !== 4 || resultSekarang.length !== 4) return null;
+      const kopSebelum = resultSebelum[1]; // digit ke-2
+      const kopSekarang = resultSekarang[1]; // digit ke-2
+      return kopSebelum + kopSekarang; // misal: "20"
     }
 
+    // === INISIALISASI ===
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('input2D').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') generateResult();
+      const marketSelect = document.getElementById('marketSelect');
+      const resultSebelum = document.getElementById('resultSebelum');
+      const resultSekarang = document.getElementById('resultSekarang');
+      const btnCari = document.getElementById('btnCari');
+      const btnEdit = document.getElementById('btnEdit');
+      const btnSimpan = document.getElementById('btnSimpan');
+      const btnHapus = document.getElementById('btnHapus');
+
+      // Hanya angka
+      [resultSebelum, resultSekarang].forEach(el => {
+        el.addEventListener('input', () => {
+          el.value = el.value.replace(/[^0-9]/g, '').slice(0, 4);
+        });
       });
+
+      // Cari
+      btnCari.addEventListener('click', () => {
+        const market = marketSelect.value;
+        if (!market) {
+          showStatus("⚠️ Pilih market terlebih dahulu.", "error");
+          return;
+        }
+        const r1 = resultSebelum.value.trim();
+        const r2 = resultSekarang.value.trim();
+        if (r1.length !== 4 || r2.length !== 4) {
+          showStatus("⚠️ Masukkan dua result 4D.", "error");
+          return;
+        }
+        const key2D = getKop2D(r1, r2);
+        if (!key2D || !fullWeakMap[key2D]) {
+          showStatus("❌ Kombinasi kop tidak valid.", "error");
+          return;
+        }
+
+        const [d1, d2] = fullWeakMap[key2D];
+        document.getElementById('show2D').textContent = key2D;
+        document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
+        document.getElementById('resultBox').style.display = 'block';
+        current2D = key2D;
+        selectedMarket = market;
+        showStatus("✅ Dasar lemah siap.", "success");
+      });
+
+      // Edit
+      btnEdit.addEventListener('click', () => {
+        if (current2D && selectedMarket) {
+          const newData = prompt(`Edit dasar lemah untuk ${current2D} (format: d1,d2)`);
+          if (newData) {
+            const parts = newData.split(',').map(p => p.trim());
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+              const [d1, d2] = parts.map(Number);
+              if (d1 >= 1 && d1 <= 9 && d2 >= 1 && d2 <= 9 && d1 !== d2) {
+                database.ref(`fitur9/${selectedMarket}/${current2D}`).set([d1, d2])
+                  .then(() => {
+                    document.getElementById('showDasar').textContent = `${d1} & ${d2}`;
+                    savedData[current2D] = [d1, d2];
+                    renderSavedList(selectedMarket);
+                    showStatus("✅ Data diperbarui.", "success");
+                  });
+              } else {
+                alert("Nilai harus 1–9 dan berbeda.");
+              }
+            }
+          }
+        } else {
+          showStatus("ℹ️ Tidak ada data untuk diedit.", "error");
+        }
+      });
+
+      // Simpan
+      btnSimpan.addEventListener('click', () => {
+        if (!current2D || !selectedMarket) {
+          showStatus("⚠️ Tidak ada hasil untuk disimpan.", "error");
+          return;
+        }
+        const [d1, d2] = fullWeakMap[current2D];
+        database.ref(`fitur9/${selectedMarket}/${current2D}`).set([d1, d2])
+          .then(() => {
+            savedData[current2D] = [d1, d2];
+            localStorage.setItem('lastMarket', selectedMarket);
+            showStatus("✅ Tersimpan ke cloud!", "success");
+            renderSavedList(selectedMarket);
+          })
+          .catch(err => {
+            console.error("Simpan error:", err);
+            showStatus("❌ Gagal simpan: cek koneksi.", "error");
+          });
+      });
+
+      // Hapus
+      btnHapus.addEventListener('click', () => {
+        if (!current2D || !selectedMarket || !savedData[current2D]) {
+          showStatus("ℹ️ Tidak ada data cloud untuk dihapus.", "error");
+          return;
+        }
+        if (!confirm(`Hapus ${current2D} dari ${selectedMarket}?`)) return;
+        database.ref(`fitur9/${selectedMarket}/${current2D}`).remove()
+          .then(() => {
+            delete savedData[current2D];
+            current2D = null;
+            document.getElementById('resultBox').style.display = 'none';
+            localStorage.removeItem('lastMarket');
+            showStatus("🗑️ Data dihapus.", "success");
+            renderSavedList(selectedMarket);
+          })
+          .catch(err => {
+            console.error("Hapus error:", err);
+            showStatus("❌ Gagal hapus.", "error");
+          });
+      });
+
+      // Ganti market → muat data
+      marketSelect.addEventListener('change', () => {
+        const market = marketSelect.value;
+        if (market) {
+          loadLatestData(market);
+        } else {
+          document.getElementById('savedList').innerHTML = '<h3>Data Tersimpan</h3><p><em>Pilih market untuk memuat data.</em></p>';
+          savedData = {};
+          current2D = null;
+        }
+      });
+
+      // Auto-load saat buka halaman
+      const lastMarket = localStorage.getItem('lastMarket');
+      if (lastMarket) {
+        marketSelect.value = lastMarket;
+        setTimeout(() => loadLatestData(lastMarket), 300);
+      }
     });
+
+    // === MUAT DATA TERAKHIR UNTUK MARKET ===
+    async function loadLatestData(market) {
+      try {
+        const snapshot = await database.ref(`fitur9/${market}`).once('value');
+        savedData = snapshot.val() || {};
+        selectedMarket = market;
+        renderSavedList(market);
+        
+        // Jika hanya ingin tampilkan data terakhir → opsional
+        // Tapi karena struktur key = 2D, kita tampilkan semua
+      } catch (err) {
+        console.warn("Gagal muat data:", err);
+        showStatus("⚠️ Gagal muat data dari cloud.", "error");
+      }
+    }
   </script>
 </body>
 </html>
